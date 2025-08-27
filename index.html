@@ -1,383 +1,176 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Online Staff Roster</title>
-    <!-- Use Tailwind CSS for a modern, responsive design -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Use Inter font for clean typography -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <style>
-      /* Ensure the font is applied and the body fills the screen */
-      body {
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Roster App</title>
+  <!-- Load Tailwind CSS for styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom CSS for visual polish and mobile responsiveness */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
+    
+    body {
         font-family: 'Inter', sans-serif;
         background-color: #f3f4f6;
-      }
-      /* Custom scrollbar for a cleaner look */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #e5e7eb;
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 10px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
-      }
-    </style>
-  </head>
-  <body class="p-4 md:p-8">
-    <div
-      class="max-w-7xl mx-auto flex flex-col min-h-screen bg-gray-100 rounded-xl shadow-xl overflow-hidden"
-    >
-      <!-- Header -->
-      <header class="bg-white shadow-md p-4 sticky top-0 z-10">
-        <div class="flex flex-col sm:flex-row justify-between items-center">
-          <h1 class="text-2xl font-bold text-gray-800 mb-2 sm:mb-0">
-            Online Staff Roster
-          </h1>
-          <div class="flex items-center space-x-4">
-            <span id="user-id-display" class="text-sm text-gray-500"></span>
-            <button
-              id="share-btn"
-              class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-md hover:bg-indigo-700 transition-colors"
-            >
-              Share Roster
-            </button>
-          </div>
-        </div>
-      </header>
+        padding: 1rem;
+        color: #1f2937;
+    }
+    .roster-container {
+        max-width: 1024px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background-color: #ffffff;
+        border-radius: 1rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+    th, td {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: center;
+    }
+    th {
+        background-color: #f9fafb;
+        font-weight: 600;
+        color: #4b5563;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    tr:last-child td {
+        border-bottom: none;
+    }
+    .roster-shift {
+        cursor: grab;
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        background-color: #22c55e;
+        color: white;
+        font-weight: 500;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease-in-out;
+    }
+    .roster-shift:hover {
+        transform: translateY(-2px);
+    }
+    .roster-cell {
+        min-height: 48px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .sortable-ghost {
+      opacity: 0.4;
+    }
+  </style>
+</head>
+<body>
 
-      <!-- Main Content Area -->
-      <main class="flex-grow p-4 md:p-8 w-full">
-        <!-- Roster ID and Message -->
-        <div class="mb-8">
-          <div class="bg-white rounded-xl shadow-md p-6">
-            <h2 id="roster-name-display" class="text-xl font-semibold text-gray-800 mb-4">
-              Create or Load a Roster
-            </h2>
-            <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <input
-                id="roster-id-input"
-                type="text"
-                class="flex-grow w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Enter Roster ID (e.g., 'summer-2025-roster')"
-              />
-              <button
-                id="load-roster-btn"
-                class="w-full sm:w-auto px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 transition-colors"
-              >
-                Load Roster
-              </button>
-            </div>
-            <p id="message-box" class="mt-4 text-sm font-medium text-center text-indigo-600 transition-opacity duration-300"></p>
-            <pre id="share-info-display" class="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-gray-700 overflow-auto hidden"></pre>
-          </div>
-        </div>
+  <div class="roster-container">
+    <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Weekly Roster</h1>
+    <div id="roster-table-container"></div>
+  </div>
+  
+  <!-- Sortable.js library for drag-and-drop -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
 
-        <!-- Shift Management and Roster Display -->
-        <div id="roster-content" class="grid grid-cols-1 lg:grid-cols-3 gap-8 hidden">
-          <!-- Staff and Color Input -->
-          <div class="lg:col-span-1 bg-white rounded-xl shadow-md p-6 h-fit sticky lg:top-24">
-            <h2 class="text-xl font-semibold text-gray-800 mb-4">
-              Add Staff
-            </h2>
-            <div class="space-y-4">
-              <input
-                id="staff-name-input"
-                type="text"
-                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Staff Name"
-              />
-              <div class="flex items-center space-x-2">
-                <input
-                  id="color-input"
-                  type="color"
-                  class="w-16 h-10 rounded-lg border border-gray-300"
-                  value="#16a3b5"
-                />
-                <span class="text-sm text-gray-500">
-                  Pick a color for the staff member.
-                </span>
-              </div>
-            </div>
-          </div>
+  <script>
+    // --- Roster Data (Simulates your spreadsheet data) ---
+    // This data is hard-coded into the script and will not be saved on refresh.
+    let rosterData = [
+      { Date: "Mon 2025-09-08", Staff: "Chrissy", Shift: "Shop", Role: "Supervisor" },
+      { Date: "Mon 2025-09-08", Staff: "Jodie", Shift: "Shop", Role: "Staff" },
+      { Date: "Mon 2025-09-08", Staff: "Emma", Shift: "Shop", Role: "Staff" },
+      { Date: "Mon 2025-09-08", Staff: "Zack", Shift: "Yard", Role: "Supervisor" },
+      { Date: "Mon 2025-09-08", Staff: "Simon", Shift: "Yard", Role: "Staff" },
+      { Date: "Mon 2025-09-08", Staff: "Jen", Shift: "Yard", Role: "Staff" },
+      { Date: "Tue 2025-09-09", Staff: "Chrissy", Shift: "Yard", Role: "Staff" },
+      { Date: "Tue 2025-09-09", Staff: "Simon", Shift: "Yard", Role: "Supervisor" }
+    ];
+
+    // --- Core Roster Rendering Function ---
+    function renderRoster() {
+      // 1. Get unique dates and staff names from the data
+      const dates = [...new Set(rosterData.map(r => r.Date))].sort();
+      const staff = [...new Set(rosterData.map(r => r.Staff))].sort();
+
+      // 2. Build the HTML string for the table
+      let html = `<table class="min-w-full divide-y divide-gray-200 shadow-sm"><thead><tr><th class="px-6 py-3">Staff</th>`;
+      dates.forEach(d => html += `<th class="px-6 py-3">${d}</th>`);
+      html += `</tr></thead><tbody class="bg-white divide-y divide-gray-200">`;
+
+      staff.forEach(s => {
+        html += `<tr><td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${s}</td>`;
+        dates.forEach(d => {
+          // Find the shift for the current staff and date
+          const shift = rosterData.find(r => r.Date === d && r.Staff === s);
+          const content = shift ? `${shift.Shift} (${shift.Role})` : "";
           
-          <!-- Shift Grid -->
-          <div class="lg:col-span-2 bg-white rounded-xl shadow-md p-6 overflow-x-auto">
-            <div id="roster-grid" class="grid grid-cols-7 gap-px rounded-lg overflow-hidden border border-gray-200">
-              <!-- Grid will be populated by JS -->
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-
-    <!-- Firebase SDKs -->
-    <script type="module">
-      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-      import {
-        getAuth,
-        signInAnonymously,
-        signInWithCustomToken,
-        onAuthStateChanged,
-      } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-      import {
-        getFirestore,
-        doc,
-        setDoc,
-        onSnapshot,
-      } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-      // --- DOM Elements ---
-      const rosterIdInput = document.getElementById('roster-id-input');
-      const loadRosterBtn = document.getElementById('load-roster-btn');
-      const shareBtn = document.getElementById('share-btn');
-      const rosterContent = document.getElementById('roster-content');
-      const rosterNameDisplay = document.getElementById('roster-name-display');
-      const userIdDisplay = document.getElementById('user-id-display');
-      const shareInfoDisplay = document.getElementById('share-info-display');
-      const messageBox = document.getElementById('message-box');
-      const rosterGrid = document.getElementById('roster-grid');
-      const staffNameInput = document.getElementById('staff-name-input');
-      const colorInput = document.getElementById('color-input');
-
-      // --- Global State Variables ---
-      let db, auth;
-      let currentRosterId = '';
-      let rosterData = { name: '', shifts: {} };
-      let unsubscribeSnapshot = null;
-
-      // --- Utility Functions ---
-      const showMessage = (msg) => {
-        messageBox.textContent = msg;
-        setTimeout(() => (messageBox.textContent = ''), 4000);
-      };
-
-      const getDayOfWeek = (date) => {
-        const d = new Date(date);
-        return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-      };
-
-      const getWeekDays = (startDate) => {
-        const dates = [];
-        let currentDate = new Date(startDate);
-        for (let i = 0; i < 7; i++) {
-          dates.push(currentDate.toISOString().slice(0, 10));
-          currentDate.setDate(currentDate.getDate() + 1);
-        }
-        return dates;
-      };
-
-      const renderRoster = () => {
-        rosterGrid.innerHTML = '';
-        const weekDates = getWeekDays(new Date());
-
-        weekDates.forEach(date => {
-          const dateColumn = document.createElement('div');
-          dateColumn.className = 'flex flex-col';
-
-          // Day Header
-          const header = document.createElement('div');
-          header.className = 'bg-gray-200 text-center font-semibold text-sm text-gray-800 p-2 border-b border-gray-300';
-          header.textContent = getDayOfWeek(date);
-          dateColumn.appendChild(header);
-
-          // Shifts Column
-          const shiftsContainer = document.createElement('div');
-          shiftsContainer.className = 'flex-1 flex flex-col p-2 space-y-2';
-
-          const shiftsForDate = rosterData.shifts[date] || [];
-          if (shiftsForDate.length === 0) {
-            shiftsContainer.innerHTML = '<p class="text-sm text-center text-gray-400">No shifts</p>';
-          } else {
-            shiftsForDate.forEach(shift => {
-              const shiftElement = document.createElement('div');
-              shiftElement.className = 'relative p-2 rounded-md font-medium text-white shadow-sm group';
-              shiftElement.style.backgroundColor = shift.color;
-              shiftElement.textContent = shift.staff;
-              
-              const removeBtn = document.createElement('button');
-              removeBtn.className = 'absolute top-1 right-1 p-1 bg-white bg-opacity-30 rounded-full text-white opacity-0 group-hover:opacity-100 transition-opacity';
-              removeBtn.title = 'Remove Shift';
-              removeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
-              </svg>`;
-              removeBtn.onclick = () => handleRemoveShift(date, shift.id);
-              shiftElement.appendChild(removeBtn);
-
-              shiftsContainer.appendChild(shiftElement);
-            });
-          }
-
-          // Add Shift Button
-          const addBtn = document.createElement('button');
-          addBtn.className = 'p-2 border border-dashed border-gray-400 rounded-md text-gray-500 hover:bg-gray-200 transition-colors mt-auto';
-          addBtn.textContent = '+';
-          addBtn.onclick = () => handleAddShift(date);
-          shiftsContainer.appendChild(addBtn);
-
-          dateColumn.appendChild(shiftsContainer);
-          rosterGrid.appendChild(dateColumn);
+          // Add a data attribute for the cell's staff and date
+          html += `<td class="px-6 py-4 roster-cell" data-date="${d}" data-staff="${s}">${content ? `<div class="roster-shift">${content}</div>` : ""}</td>`;
         });
-      };
-
-      // --- Firestore Operations ---
-      const handleLoadRoster = () => {
-        if (!db || !auth) {
-          showMessage('Firebase is not ready. Please wait a moment.');
-          return;
-        }
-
-        const newRosterId = rosterIdInput.value.trim();
-        if (!newRosterId) {
-          showMessage('Please enter a Roster ID.');
-          return;
-        }
-
-        if (unsubscribeSnapshot) {
-          unsubscribeSnapshot();
-        }
-        currentRosterId = newRosterId;
-        rosterContent.classList.remove('hidden');
-        showMessage(`Attempting to load/create roster with ID: ${currentRosterId}`);
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const rosterDocRef = doc(db, 'artifacts', appId, 'public/data/rosters', currentRosterId);
-
-        unsubscribeSnapshot = onSnapshot(
-          rosterDocRef,
-          (docSnap) => {
-            if (docSnap.exists()) {
-              rosterData = docSnap.data();
-              rosterNameDisplay.textContent = rosterData.name || `Roster ${currentRosterId}`;
-              showMessage(`Roster "${rosterData.name}" loaded successfully.`);
-            } else {
-              rosterData = { name: `Roster ${currentRosterId}`, shifts: {} };
-              rosterNameDisplay.textContent = rosterData.name;
-              showMessage(`Roster "${currentRosterId}" does not exist. A new one will be created.`);
-            }
-            renderRoster();
-          },
-          (error) => {
-            console.error('Error listening to roster data:', error);
-            showMessage('Error loading roster data.');
-          }
-        );
-      };
-
-      const handleAddShift = async (date) => {
-        if (!db || !currentRosterId || !staffNameInput.value) {
-          showMessage('Please enter a staff name and load a roster.');
-          return;
-        }
-
-        const newShift = {
-          id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-          staff: staffNameInput.value,
-          color: colorInput.value
-        };
-
-        const updatedShifts = { ...rosterData.shifts };
-        if (!updatedShifts[date]) {
-          updatedShifts[date] = [];
-        }
-        updatedShifts[date].push(newShift);
-        
-        try {
-          const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-          const rosterDocRef = doc(db, 'artifacts', appId, 'public/data/rosters', currentRosterId);
-          await setDoc(rosterDocRef, { ...rosterData, shifts: updatedShifts }, { merge: true });
-          showMessage('Shift added successfully!');
-        } catch (error) {
-          console.error('Error adding shift:', error);
-          showMessage('Failed to add shift.');
-        }
-      };
-
-      const handleRemoveShift = async (date, shiftId) => {
-        if (!db || !currentRosterId) return;
-
-        const updatedShifts = { ...rosterData.shifts };
-        updatedShifts[date] = updatedShifts[date].filter(shift => shift.id !== shiftId);
-
-        try {
-          const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-          const rosterDocRef = doc(db, 'artifacts', appId, 'public/data/rosters', currentRosterId);
-          await setDoc(rosterDocRef, { ...rosterData, shifts: updatedShifts }, { merge: true });
-          showMessage('Shift removed successfully!');
-        } catch (error) {
-          console.error('Error removing shift:', error);
-          showMessage('Failed to remove shift.');
-        }
-      };
-
-      // --- Event Listeners ---
-      loadRosterBtn.addEventListener('click', handleLoadRoster);
-      shareBtn.addEventListener('click', () => {
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const message = `Roster ID: ${currentRosterId}\nApp ID: ${appId}`;
-        shareInfoDisplay.textContent = message;
-        shareInfoDisplay.classList.remove('hidden');
-        showMessage('Sharing info copied!');
+        html += `</tr>`;
       });
 
-      // --- Self-Executing Firebase Initialization ---
-      (async () => {
-        showMessage('Initializing... Please wait.');
-        try {
-          // Await the global variables to be available
-          const firebaseConfig = await new Promise(resolve => {
-            const checkGlobal = () => {
-              if (typeof __firebase_config !== 'undefined') {
-                resolve(JSON.parse(__firebase_config));
-              } else {
-                setTimeout(checkGlobal, 100);
-              }
-            };
-            checkGlobal();
-          });
-          
-          const initialAuthToken = await new Promise(resolve => {
-            const checkGlobal = () => {
-              if (typeof __initial_auth_token !== 'undefined') {
-                resolve(__initial_auth_token);
-              } else {
-                setTimeout(checkGlobal, 100);
-              }
-            };
-            checkGlobal();
-          });
+      html += `</tbody></table>`;
+      
+      // 3. Insert the table HTML into the page
+      document.getElementById("roster-table-container").innerHTML = html;
 
-          const app = initializeApp(firebaseConfig);
-          auth = getAuth(app);
-          db = getFirestore(app);
+      // 4. Initialize drag-and-drop on all cells
+      initSortable();
+    }
 
-          if (initialAuthToken) {
-            await signInWithCustomToken(auth, initialAuthToken);
-          } else {
-            await signInAnonymously(auth);
+    // --- Drag-and-Drop Initialization ---
+    function initSortable() {
+      document.querySelectorAll('.roster-cell').forEach(el => {
+        new Sortable(el, {
+          group: 'shared',
+          animation: 150,
+          onAdd: function (evt) {
+            // Get the new cell's attributes from the droppable container
+            const newDate = evt.to.getAttribute("data-date");
+            const newStaff = evt.to.getAttribute("data-staff");
+
+            // Get the old cell's attributes from the draggable item's parent
+            const oldDate = evt.from.getAttribute("data-date");
+            const oldStaff = evt.from.getAttribute("data-staff");
+            
+            // Extract the shift and role from the moved item's text
+            const content = evt.item.innerText.trim();
+            const parts = content.split(" (");
+            const shift = parts[0];
+            const role = parts[1] ? parts[1].replace(")", "") : "";
+            
+            // --- Update the Data Structure ---
+            // 1. Remove the old shift
+            rosterData = rosterData.filter(r => !(r.Date === oldDate && r.Staff === oldStaff));
+            
+            // 2. Add the new shift with the updated date and staff
+            rosterData.push({
+              Date: newDate,
+              Staff: newStaff,
+              Shift: shift,
+              Role: role
+            });
+
+            // 3. Re-render the entire table to reflect the change
+            renderRoster();
           }
+        });
+      });
+    }
 
-          onAuthStateChanged(auth, (user) => {
-            if (user) {
-              userIdDisplay.textContent = `User ID: ${user.uid.substring(0, 8)}...`;
-              showMessage('Firebase is ready. You can now load a roster.');
-            }
-          });
-        } catch (error) {
-          console.error('Firebase initialization error:', error);
-          showMessage('Could not initialize app. Check your connection.');
-        }
-      })();
-    </script>
-  </body>
+    // --- Initial Page Load ---
+    // Start the process by rendering the roster when the page is loaded.
+    document.addEventListener('DOMContentLoaded', renderRoster);
+  </script>
+
+</body>
 </html>
