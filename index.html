@@ -73,6 +73,7 @@
                 <h2 class="text-xl font-bold text-gray-800 mb-4">Staff Management</h2>
                 <form id="add-staff-form" class="flex gap-2 mb-4">
                     <input type="text" id="new-staff-name" placeholder="Add new staff..." class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                    <input type="color" id="new-staff-color" value="#a3a3a3" class="p-1 h-10 w-10 border border-gray-300 rounded-md cursor-pointer">
                     <button type="submit" class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center">
                         <i data-lucide="plus" class="w-5 h-5"></i>
                     </button>
@@ -103,8 +104,18 @@
     <script>
         // --- Data Model ---
         let staffMembers = [
-            'Chrissy', 'Gemma', 'Jodie', 'Niamh', 'Julie', 'MacKenzie', 
-            'India', 'Zack', 'Charlie', 'Else', 'Simon', 'Alex'
+            { name: 'Chrissy', color: '#60a5fa' },
+            { name: 'Gemma', color: '#f87171' },
+            { name: 'Jodie', color: '#4ade80' },
+            { name: 'Niamh', color: '#fbbf24' },
+            { name: 'Julie', color: '#a78bfa' },
+            { name: 'MacKenzie', color: '#34d399' },
+            { name: 'India', color: '#f472b6' },
+            { name: 'Zack', color: '#fb923c' },
+            { name: 'Charlie', color: '#2dd4bf' },
+            { name: 'Else', color: '#a3a3a3' },
+            { name: 'Simon', color: '#93c5fd' },
+            { name: 'Alex', color: '#c084fc' }
         ];
 
         // Function to create an empty 20x7 grid
@@ -127,14 +138,26 @@
         const datePicker = document.getElementById('start-date-picker');
         const addStaffForm = document.getElementById('add-staff-form');
         const newStaffNameInput = document.getElementById('new-staff-name');
+        const newStaffColorInput = document.getElementById('new-staff-color');
 
+        // --- Helper Functions ---
+        function getContrastingTextColor(hexcolor) {
+            if (!hexcolor) return '#000000';
+            hexcolor = hexcolor.replace("#", "");
+            const r = parseInt(hexcolor.substr(0, 2), 16);
+            const g = parseInt(hexcolor.substr(2, 2), 16);
+            const b = parseInt(hexcolor.substr(4, 2), 16);
+            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+            return (yiq >= 128) ? '#1f2937' : '#ffffff'; // Using Tailwind gray-800 for black
+        }
+        
         // --- Main Render Function ---
         function render() {
             renderDateDisplay();
             renderStaffPalette();
             renderRosterGrid();
             renderNotes();
-            lucide.createIcons(); // Re-render icons
+            lucide.createIcons();
         }
 
         function renderDateDisplay() {
@@ -148,11 +171,11 @@
 
         function renderStaffPalette() {
             staffPalette.innerHTML = ''; // Clear previous content
-            staffMembers.forEach(name => {
-                const staffEl = createDraggableName(name, 'palette', 'bg-gray-200 text-gray-800 group');
+            staffMembers.forEach(staff => {
+                const staffEl = createDraggableName(staff.name, 'palette');
                 staffPalette.appendChild(staffEl);
             });
-            const removeEl = createDraggableName('Remove', 'palette', 'bg-red-200 text-red-800');
+            const removeEl = createDraggableName('Remove', 'palette');
             staffPalette.appendChild(removeEl);
         }
 
@@ -213,28 +236,68 @@
             return headerRow;
         }
 
-        function createDraggableName(name, type, styleClasses, data = {}) {
+        function createDraggableName(name, type, data = {}) {
             const el = document.createElement('div');
-            el.className = `p-2 rounded-md font-medium text-center transition-all flex justify-between items-center ${styleClasses}`;
-            
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = name;
-            el.appendChild(nameSpan);
-
-            if (type === 'palette' && name !== 'Remove') {
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity';
-                removeBtn.innerHTML = `<i data-lucide="x" class="w-4 h-4"></i>`;
-                removeBtn.onclick = () => handleRemoveStaff(name);
-                el.appendChild(removeBtn);
-            }
-
             el.draggable = true;
             el.addEventListener('dragstart', (e) => handleDragStart(e, name, type, data));
             el.addEventListener('dragend', handleDragEnd);
+
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = name;
+
+            const staffMember = staffMembers.find(s => s.name === name);
+
+            if (type === 'cell' && staffMember) {
+                el.className = 'w-full h-full flex items-center justify-center rounded-md text-sm font-medium transition-all';
+                el.style.backgroundColor = staffMember.color;
+                el.style.color = getContrastingTextColor(staffMember.color);
+                el.appendChild(nameSpan);
+            } else if (type === 'palette') {
+                el.className = 'p-2 rounded-md font-medium text-center transition-all flex justify-between items-center group';
+                if (name === 'Remove') {
+                    el.classList.add('bg-red-200', 'text-red-800');
+                    el.appendChild(nameSpan);
+                } else if (staffMember) {
+                    el.classList.add('bg-gray-200', 'text-gray-800');
+                    el.appendChild(nameSpan);
+
+                    const controlsWrapper = document.createElement('div');
+                    controlsWrapper.className = 'flex items-center gap-2';
+
+                    const colorPickerLabel = document.createElement('label');
+                    colorPickerLabel.className = 'relative w-6 h-6 rounded-full border-2 border-white shadow-sm cursor-pointer';
+                    colorPickerLabel.style.backgroundColor = staffMember.color;
+
+                    const colorInput = document.createElement('input');
+                    colorInput.type = 'color';
+                    colorInput.value = staffMember.color;
+                    colorInput.className = 'absolute inset-0 w-full h-full opacity-0 cursor-pointer';
+
+                    colorInput.addEventListener('input', (e) => {
+                        colorPickerLabel.style.backgroundColor = e.target.value;
+                    });
+                    colorInput.addEventListener('change', (e) => {
+                        staffMember.color = e.target.value;
+                        render();
+                    });
+
+                    colorPickerLabel.appendChild(colorInput);
+                    controlsWrapper.appendChild(colorPickerLabel);
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.className = 'text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity';
+                    removeBtn.innerHTML = `<i data-lucide="x" class="w-4 h-4"></i>`;
+                    removeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        handleRemoveStaff(name);
+                    };
+                    controlsWrapper.appendChild(removeBtn);
+                    el.appendChild(controlsWrapper);
+                }
+            }
             return el;
         }
-
+        
         function createDroppableCell(rowIndex, colIndex) {
             const cell = document.createElement('div');
             const name = rosterData.schedule[rowIndex][colIndex];
@@ -246,7 +309,7 @@
 
             if (name) {
                 const data = { rowIndex, colIndex };
-                const nameEl = createDraggableName(name, 'cell', 'bg-blue-500 text-white w-full h-full flex items-center justify-center rounded-md text-sm', data);
+                const nameEl = createDraggableName(name, 'cell', data);
                 cell.appendChild(nameEl);
             }
             return cell;
@@ -256,18 +319,17 @@
         function handleAddStaff(e) {
             e.preventDefault();
             const newName = newStaffNameInput.value.trim();
-            if (newName && !staffMembers.includes(newName)) {
-                staffMembers.push(newName);
-                staffMembers.sort();
-                renderStaffPalette();
-                lucide.createIcons();
+            const newColor = newStaffColorInput.value;
+            if (newName && !staffMembers.some(staff => staff.name === newName)) {
+                staffMembers.push({ name: newName, color: newColor });
+                staffMembers.sort((a, b) => a.name.localeCompare(b.name));
+                render();
             }
             newStaffNameInput.value = '';
         }
 
         function handleRemoveStaff(nameToRemove) {
-            staffMembers = staffMembers.filter(name => name !== nameToRemove);
-            // Remove the staff member from the schedule
+            staffMembers = staffMembers.filter(staff => staff.name !== nameToRemove);
             rosterData.schedule = rosterData.schedule.map(row => 
                 row.map(name => (name === nameToRemove ? '' : name))
             );
@@ -282,7 +344,8 @@
         }
 
         function handleDragEnd(e) {
-            e.target.closest('[draggable="true"]').classList.remove('dragging');
+            const draggable = e.target.closest('[draggable="true"]');
+            if(draggable) draggable.classList.remove('dragging');
             draggedItem = null;
         }
 
@@ -318,8 +381,7 @@
             }
             
             rosterData.schedule[targetRowIndex][targetColIndex] = newName;
-            renderRosterGrid();
-            lucide.createIcons();
+            render();
         }
 
         // --- Initial Load ---
