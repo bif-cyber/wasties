@@ -10,6 +10,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/umd/lucide.js"></script>
     <style>
         /* Custom styles */
         body {
@@ -38,7 +40,7 @@
         .drag-over {
             outline: 2px dashed #3b82f6;
             outline-offset: -2px;
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: #eff6ff;
         }
         /* Grab cursor for draggable items */
         [draggable="true"] {
@@ -67,8 +69,14 @@
 
         <div class="flex flex-col lg:flex-row gap-8">
             <!-- Staff Palette -->
-            <aside class="lg:w-64 bg-white rounded-xl shadow-lg p-6 h-fit">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Staff</h2>
+            <aside class="lg:w-72 bg-white rounded-xl shadow-lg p-6 h-fit">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Staff Management</h2>
+                <form id="add-staff-form" class="flex gap-2 mb-4">
+                    <input type="text" id="new-staff-name" placeholder="Add new staff..." class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
+                    <button type="submit" class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center">
+                        <i data-lucide="plus" class="w-5 h-5"></i>
+                    </button>
+                </form>
                 <div id="staff-palette" class="space-y-3">
                     <!-- Draggable staff names will be generated here by JavaScript -->
                 </div>
@@ -81,37 +89,31 @@
                         <!-- Roster will be generated here by JavaScript -->
                     </div>
                 </div>
+                <!-- Notes Section -->
+                <div class="w-full bg-white rounded-xl shadow-lg overflow-hidden mt-8">
+                     <h2 class="text-xl font-bold text-gray-800 p-6 border-b">Daily Notes</h2>
+                    <div id="notes-container" class="grid grid-cols-1 md:grid-cols-7">
+                        <!-- Notes textareas will be generated here -->
+                    </div>
+                </div>
             </main>
         </div>
     </div>
 
     <script>
         // --- Data Model ---
-        const staffMembers = [
+        let staffMembers = [
             'Chrissy', 'Gemma', 'Jodie', 'Niamh', 'Julie', 'MacKenzie', 
             'India', 'Zack', 'Charlie', 'Else', 'Simon', 'Alex'
         ];
 
+        // Function to create an empty 20x7 grid
+        const createEmptySchedule = () => Array.from({ length: 20 }, () => Array(7).fill(''));
+
         let rosterData = {
             startDate: '2025-04-21',
-            sections: [
-                {
-                    colorClass: 'bg-teal-500',
-                    schedule: [
-                        ['Chrissy', 'Chrissy', 'Chrissy', 'Chrissy', 'Gemma', 'Jodie', 'Jodie'],
-                        ['Niamh', 'Gemma', 'Gemma', 'Gemma', 'Niamh', 'Niamh', 'Niamh'],
-                        ['Julie', 'Julie', 'MacKenzie', 'India', 'India', 'India', 'India']
-                    ]
-                },
-                {
-                    colorClass: 'bg-orange-500',
-                    schedule: [
-                        ['Zack', 'Zack', 'Zack', 'Zack', 'Charlie', 'Charlie', 'Else'],
-                        ['Simon', 'Simon', 'Charlie', 'Charlie', 'Alex', 'Simon', 'Simon'],
-                        ['', '', '', '', '', 'Alex', 'Alex']
-                    ]
-                }
-            ]
+            schedule: createEmptySchedule(),
+            notes: Array(7).fill('')
         };
 
         // --- State for Drag & Drop ---
@@ -120,51 +122,74 @@
         // --- DOM Elements ---
         const staffPalette = document.getElementById('staff-palette');
         const rosterContainer = document.getElementById('roster-container');
+        const notesContainer = document.getElementById('notes-container');
         const rosterDateRangeEl = document.getElementById('roster-date-range');
         const datePicker = document.getElementById('start-date-picker');
+        const addStaffForm = document.getElementById('add-staff-form');
+        const newStaffNameInput = document.getElementById('new-staff-name');
 
         // --- Main Render Function ---
         function render() {
-            // Update date displays first
+            renderDateDisplay();
+            renderStaffPalette();
+            renderRosterGrid();
+            renderNotes();
+            lucide.createIcons(); // Re-render icons
+        }
+
+        function renderDateDisplay() {
             const startDate = new Date(rosterData.startDate + 'T00:00:00');
             const endDate = new Date(startDate);
             endDate.setDate(startDate.getDate() + 6);
             const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             rosterDateRangeEl.textContent = `${dateFormatter.format(startDate)} - ${dateFormatter.format(endDate)}`;
             datePicker.value = rosterData.startDate;
+        }
 
-            // Clear existing content
-            staffPalette.innerHTML = '';
-            rosterContainer.innerHTML = '';
-
-            // 1. Render Staff Palette
+        function renderStaffPalette() {
+            staffPalette.innerHTML = ''; // Clear previous content
             staffMembers.forEach(name => {
-                const staffEl = createDraggableName(name, 'palette', 'bg-gray-200 text-gray-800');
+                const staffEl = createDraggableName(name, 'palette', 'bg-gray-200 text-gray-800 group');
                 staffPalette.appendChild(staffEl);
             });
-            // Add a special "Remove" item
             const removeEl = createDraggableName('Remove', 'palette', 'bg-red-200 text-red-800');
             staffPalette.appendChild(removeEl);
+        }
 
-
-            // 2. Render Roster
+        function renderRosterGrid() {
+            rosterContainer.innerHTML = '';
             const grid = document.createElement('div');
-            grid.className = 'grid grid-cols-7 min-w-[1000px]';
+            grid.className = 'grid grid-cols-7 min-w-[1200px]';
             
-            // Generate Header
             const headerRow = createHeader();
             grid.appendChild(headerRow);
             
-            // Generate Body
-            rosterData.sections.forEach((section, sectionIndex) => {
-                section.schedule.forEach((row, rowIndex) => {
-                    row.forEach((name, colIndex) => {
-                        const cell = createDroppableCell(section, sectionIndex, rowIndex, colIndex);
-                        grid.appendChild(cell);
-                    });
+            rosterData.schedule.forEach((row, rowIndex) => {
+                row.forEach((name, colIndex) => {
+                    const cell = createDroppableCell(rowIndex, colIndex);
+                    grid.appendChild(cell);
                 });
             });
             rosterContainer.appendChild(grid);
+        }
+
+        function renderNotes() {
+            notesContainer.innerHTML = '';
+            for(let i = 0; i < 7; i++) {
+                const noteWrapper = document.createElement('div');
+                noteWrapper.className = 'p-4 border-b md:border-b-0 md:border-r border-gray-200';
+
+                const textArea = document.createElement('textarea');
+                textArea.className = 'w-full h-24 p-2 border border-gray-200 rounded-md resize-none focus:ring-blue-500 focus:border-blue-500';
+                textArea.placeholder = `Notes for day ${i + 1}...`;
+                textArea.value = rosterData.notes[i];
+                textArea.addEventListener('input', (e) => {
+                    rosterData.notes[i] = e.target.value;
+                });
+                
+                noteWrapper.appendChild(textArea);
+                notesContainer.appendChild(noteWrapper);
+            }
         }
 
         // --- Element Creation Helpers ---
@@ -176,7 +201,7 @@
             for (let i = 0; i < 7; i++) {
                 const currentDate = new Date(startDate);
                 currentDate.setDate(startDate.getDate() + i);
-                 const parts = dayFormatter.formatToParts(currentDate);
+                const parts = dayFormatter.formatToParts(currentDate);
                 const weekday = parts.find(p => p.type === 'weekday').value;
                 const day = parts.find(p => p.type === 'day').value;
                 const month = parts.find(p => p.type === 'month').value;
@@ -190,82 +215,111 @@
 
         function createDraggableName(name, type, styleClasses, data = {}) {
             const el = document.createElement('div');
-            el.className = `p-2 rounded-md font-medium text-center transition-all ${styleClasses}`;
-            el.textContent = name;
+            el.className = `p-2 rounded-md font-medium text-center transition-all flex justify-between items-center ${styleClasses}`;
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = name;
+            el.appendChild(nameSpan);
+
+            if (type === 'palette' && name !== 'Remove') {
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity';
+                removeBtn.innerHTML = `<i data-lucide="x" class="w-4 h-4"></i>`;
+                removeBtn.onclick = () => handleRemoveStaff(name);
+                el.appendChild(removeBtn);
+            }
+
             el.draggable = true;
             el.addEventListener('dragstart', (e) => handleDragStart(e, name, type, data));
             el.addEventListener('dragend', handleDragEnd);
             return el;
         }
 
-        function createDroppableCell(section, sectionIndex, rowIndex, colIndex) {
+        function createDroppableCell(rowIndex, colIndex) {
             const cell = document.createElement('div');
-            const name = section.schedule[rowIndex][colIndex];
-            cell.className = `h-16 flex items-center justify-center p-1 border-b border-r border-white/20 transition-colors ${section.colorClass}`;
+            const name = rosterData.schedule[rowIndex][colIndex];
+            cell.className = `h-16 flex items-center justify-center p-1 border-b border-r border-gray-200 transition-colors`;
             
             cell.addEventListener('dragover', handleDragOver);
             cell.addEventListener('dragleave', handleDragLeave);
-            cell.addEventListener('drop', (e) => handleDrop(e, sectionIndex, rowIndex, colIndex));
+            cell.addEventListener('drop', (e) => handleDrop(e, rowIndex, colIndex));
 
             if (name) {
-                const data = { sectionIndex, rowIndex, colIndex };
-                const nameEl = createDraggableName(name, 'cell', 'text-white w-full h-full flex items-center justify-center', data);
+                const data = { rowIndex, colIndex };
+                const nameEl = createDraggableName(name, 'cell', 'bg-blue-500 text-white w-full h-full flex items-center justify-center rounded-md text-sm', data);
                 cell.appendChild(nameEl);
             }
             return cell;
         }
 
-        // --- Drag & Drop Event Handlers ---
+        // --- Event Handlers ---
+        function handleAddStaff(e) {
+            e.preventDefault();
+            const newName = newStaffNameInput.value.trim();
+            if (newName && !staffMembers.includes(newName)) {
+                staffMembers.push(newName);
+                staffMembers.sort();
+                renderStaffPalette();
+                lucide.createIcons();
+            }
+            newStaffNameInput.value = '';
+        }
+
+        function handleRemoveStaff(nameToRemove) {
+            staffMembers = staffMembers.filter(name => name !== nameToRemove);
+            // Remove the staff member from the schedule
+            rosterData.schedule = rosterData.schedule.map(row => 
+                row.map(name => (name === nameToRemove ? '' : name))
+            );
+            render();
+        }
+
         function handleDragStart(e, name, type, data) {
             draggedItem = { name, type, data };
             e.dataTransfer.effectAllowed = 'move';
             e.dataTransfer.setData('text/plain', name);
-            setTimeout(() => e.target.classList.add('dragging'), 0);
+            setTimeout(() => e.target.closest('[draggable="true"]').classList.add('dragging'), 0);
         }
 
         function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
+            e.target.closest('[draggable="true"]').classList.remove('dragging');
             draggedItem = null;
         }
 
         function handleDragOver(e) {
             e.preventDefault();
-            const targetCell = e.target.closest('div');
+            const targetCell = e.target.closest('div[class*="border-b"]');
             if (targetCell) {
                 targetCell.classList.add('drag-over');
             }
         }
 
         function handleDragLeave(e) {
-            const targetCell = e.target.closest('div');
+             const targetCell = e.target.closest('div[class*="border-b"]');
             if (targetCell) {
                 targetCell.classList.remove('drag-over');
             }
         }
 
-        function handleDrop(e, targetSectionIndex, targetRowIndex, targetColIndex) {
+        function handleDrop(e, targetRowIndex, targetColIndex) {
             e.preventDefault();
-            const targetCell = e.target.closest('div');
+            const targetCell = e.target.closest('div[class*="border-b"]');
             if (targetCell) {
                 targetCell.classList.remove('drag-over');
             }
 
             if (!draggedItem) return;
 
-            // The name to be placed in the target cell
             const newName = draggedItem.name === 'Remove' ? '' : draggedItem.name;
 
-            // If the item came from another roster cell, clear its original position
             if (draggedItem.type === 'cell') {
                 const origin = draggedItem.data;
-                rosterData.sections[origin.sectionIndex].schedule[origin.rowIndex][origin.colIndex] = '';
+                rosterData.schedule[origin.rowIndex][origin.colIndex] = '';
             }
             
-            // Place the new name in the target cell
-            rosterData.sections[targetSectionIndex].schedule[targetRowIndex][targetColIndex] = newName;
-
-            // Re-render the entire UI to reflect the change
-            render();
+            rosterData.schedule[targetRowIndex][targetColIndex] = newName;
+            renderRosterGrid();
+            lucide.createIcons();
         }
 
         // --- Initial Load ---
@@ -274,6 +328,7 @@
                 rosterData.startDate = e.target.value;
                 render();
             });
+            addStaffForm.addEventListener('submit', handleAddStaff);
             render();
         });
 
