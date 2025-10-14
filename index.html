@@ -1,338 +1,375 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly Staff Roster Editor</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
-    <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/umd/lucide.js"></script>
-    <style>
-        /* Custom styles */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Style for the scrollbar to be more subtle */
-        .roster-container::-webkit-scrollbar {
-            height: 8px;
-        }
-        .roster-container::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .roster-container::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        .roster-container::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        /* Class for the element being dragged */
-        .dragging {
-            opacity: 0.5;
-            transform: scale(0.95);
-        }
-        /* Class for highlighting a valid drop zone */
-        .drag-over {
-            outline: 2px dashed #3b82f6;
-            outline-offset: -2px;
-            background-color: #eff6ff;
-        }
-        /* Grab cursor for draggable items */
-        [draggable="true"] {
-            cursor: grab;
-        }
-        [draggable="true"]:active {
-            cursor: grabbing;
-        }
-    </style>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.1">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Menlo; color: #6d6d6d; -webkit-text-stroke: #6d6d6d}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Menlo; color: #6b0001; -webkit-text-stroke: #6b0001}
+    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Menlo; color: #fb0007; -webkit-text-stroke: #fb0007}
+    p.p4 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Menlo; color: #0000ff; -webkit-text-stroke: #0000ff}
+    p.p5 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Menlo; -webkit-text-stroke: #000000}
+    p.p6 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Menlo; color: #4d5055; -webkit-text-stroke: #4d5055}
+    p.p7 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Menlo; -webkit-text-stroke: #000000; min-height: 16.0px}
+    p.p8 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px Menlo; color: #18702b; -webkit-text-stroke: #18702b}
+    span.s1 {font-kerning: none; background-color: #ecf1f7}
+    span.s2 {font-kerning: none; color: #fb0007; background-color: #ecf1f7; -webkit-text-stroke: 0px #fb0007}
+    span.s3 {font-kerning: none; color: #2a2a2a; background-color: #ecf1f7; -webkit-text-stroke: 0px #2a2a2a}
+    span.s4 {font-kerning: none; color: #000000; background-color: #ecf1f7; -webkit-text-stroke: 0px #000000}
+    span.s5 {font-kerning: none; color: #0000ff; background-color: #ecf1f7; -webkit-text-stroke: 0px #0000ff}
+    span.s6 {font-kerning: none; color: #6b0001; background-color: #ecf1f7; -webkit-text-stroke: 0px #6b0001}
+    span.s7 {font-kerning: none; color: #18702b; background-color: #ecf1f7; -webkit-text-stroke: 0px #18702b}
+    span.s8 {font-kerning: none; color: #093c94; background-color: #ecf1f7; -webkit-text-stroke: 0px #093c94}
+    span.s9 {font-kerning: none; color: #137646; background-color: #ecf1f7; -webkit-text-stroke: 0px #137646}
+    span.s10 {font-kerning: none}
+    span.s11 {font-kerning: none; color: #6f0ec3; background-color: #ecf1f7; -webkit-text-stroke: 0px #6f0ec3}
+    span.s12 {font-kerning: none; color: #0e6e6d; background-color: #ecf1f7; -webkit-text-stroke: 0px #0e6e6d}
+    span.s13 {font-kerning: none; color: #a4450b; background-color: #ecf1f7; -webkit-text-stroke: 0px #a4450b}
+    span.s14 {font-kerning: none; color: #4d5055; background-color: #ecf1f7; -webkit-text-stroke: 0px #4d5055}
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8">
-
-    <div class="w-full max-w-screen-2xl mx-auto">
-        <div class="p-6 bg-white rounded-xl shadow-lg mb-8">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Weekly Roster Editor</h1>
-                    <p id="roster-date-range" class="text-gray-500 mt-1"></p>
-                </div>
-                <div class="flex-shrink-0">
-                    <label for="start-date-picker" class="block text-sm font-medium text-gray-700 mb-1">Start of Week</label>
-                    <input type="date" id="start-date-picker" class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                </div>
-            </div>
-        </div>
-
-        <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Staff Palette -->
-            <aside class="lg:w-72 bg-white rounded-xl shadow-lg p-6 h-fit">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Staff Management</h2>
-                <form id="add-staff-form" class="flex gap-2 mb-4">
-                    <input type="text" id="new-staff-name" placeholder="Add new staff..." class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                    <button type="submit" class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center">
-                        <i data-lucide="plus" class="w-5 h-5"></i>
-                    </button>
-                </form>
-                <div id="staff-palette" class="space-y-3">
-                    <!-- Draggable staff names will be generated here by JavaScript -->
-                </div>
-            </aside>
-
-            <!-- Roster -->
-            <main class="flex-1">
-                <div class="w-full bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div id="roster-container" class="roster-container overflow-x-auto">
-                        <!-- Roster will be generated here by JavaScript -->
-                    </div>
-                </div>
-                <!-- Notes Section -->
-                <div class="w-full bg-white rounded-xl shadow-lg overflow-hidden mt-8">
-                     <h2 class="text-xl font-bold text-gray-800 p-6 border-b">Daily Notes</h2>
-                    <div id="notes-container" class="grid grid-cols-1 md:grid-cols-7">
-                        <!-- Notes textareas will be generated here -->
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-
-    <script>
-        // --- Data Model ---
-        let staffMembers = [
-            'Chrissy', 'Gemma', 'Jodie', 'Niamh', 'Julie', 'MacKenzie', 
-            'India', 'Zack', 'Charlie', 'Else', 'Simon', 'Alex'
-        ];
-
-        // Function to create an empty 20x7 grid
-        const createEmptySchedule = () => Array.from({ length: 20 }, () => Array(7).fill(''));
-
-        let rosterData = {
-            startDate: '2025-04-21',
-            schedule: createEmptySchedule(),
-            notes: Array(7).fill('')
-        };
-
-        // --- State for Drag & Drop ---
-        let draggedItem = null;
-
-        // --- DOM Elements ---
-        const staffPalette = document.getElementById('staff-palette');
-        const rosterContainer = document.getElementById('roster-container');
-        const notesContainer = document.getElementById('notes-container');
-        const rosterDateRangeEl = document.getElementById('roster-date-range');
-        const datePicker = document.getElementById('start-date-picker');
-        const addStaffForm = document.getElementById('add-staff-form');
-        const newStaffNameInput = document.getElementById('new-staff-name');
-
-        // --- Main Render Function ---
-        function render() {
-            renderDateDisplay();
-            renderStaffPalette();
-            renderRosterGrid();
-            renderNotes();
-            lucide.createIcons(); // Re-render icons
-        }
-
-        function renderDateDisplay() {
-            const startDate = new Date(rosterData.startDate + 'T00:00:00');
-            const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 6);
-            const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            rosterDateRangeEl.textContent = `${dateFormatter.format(startDate)} - ${dateFormatter.format(endDate)}`;
-            datePicker.value = rosterData.startDate;
-        }
-
-        function renderStaffPalette() {
-            staffPalette.innerHTML = ''; // Clear previous content
-            staffMembers.forEach(name => {
-                const staffEl = createDraggableName(name, 'palette', 'bg-gray-200 text-gray-800 group');
-                staffPalette.appendChild(staffEl);
-            });
-            const removeEl = createDraggableName('Remove', 'palette', 'bg-red-200 text-red-800');
-            staffPalette.appendChild(removeEl);
-        }
-
-        function renderRosterGrid() {
-            rosterContainer.innerHTML = '';
-            const grid = document.createElement('div');
-            grid.className = 'grid grid-cols-7 min-w-[1200px]';
-            
-            const headerRow = createHeader();
-            grid.appendChild(headerRow);
-            
-            rosterData.schedule.forEach((row, rowIndex) => {
-                row.forEach((name, colIndex) => {
-                    const cell = createDroppableCell(rowIndex, colIndex);
-                    grid.appendChild(cell);
-                });
-            });
-            rosterContainer.appendChild(grid);
-        }
-
-        function renderNotes() {
-            notesContainer.innerHTML = '';
-            for(let i = 0; i < 7; i++) {
-                const noteWrapper = document.createElement('div');
-                noteWrapper.className = 'p-4 border-b md:border-b-0 md:border-r border-gray-200';
-
-                const textArea = document.createElement('textarea');
-                textArea.className = 'w-full h-24 p-2 border border-gray-200 rounded-md resize-none focus:ring-blue-500 focus:border-blue-500';
-                textArea.placeholder = `Notes for day ${i + 1}...`;
-                textArea.value = rosterData.notes[i];
-                textArea.addEventListener('input', (e) => {
-                    rosterData.notes[i] = e.target.value;
-                });
-                
-                noteWrapper.appendChild(textArea);
-                notesContainer.appendChild(noteWrapper);
-            }
-        }
-
-        // --- Element Creation Helpers ---
-        function createHeader() {
-            const headerRow = document.createElement('div');
-            headerRow.className = 'col-span-7 grid grid-cols-7 sticky top-0 bg-white z-10';
-            const startDate = new Date(rosterData.startDate + 'T00:00:00');
-            const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
-            for (let i = 0; i < 7; i++) {
-                const currentDate = new Date(startDate);
-                currentDate.setDate(startDate.getDate() + i);
-                const parts = dayFormatter.formatToParts(currentDate);
-                const weekday = parts.find(p => p.type === 'weekday').value;
-                const day = parts.find(p => p.type === 'day').value;
-                const month = parts.find(p => p.type === 'month').value;
-                const dayCell = document.createElement('div');
-                dayCell.className = 'text-center font-semibold text-gray-700 p-3 border-b-2 border-r border-gray-200';
-                dayCell.textContent = `${weekday} ${day} ${month}`;
-                headerRow.appendChild(dayCell);
-            }
-            return headerRow;
-        }
-
-        function createDraggableName(name, type, styleClasses, data = {}) {
-            const el = document.createElement('div');
-            el.className = `p-2 rounded-md font-medium text-center transition-all flex justify-between items-center ${styleClasses}`;
-            
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = name;
-            el.appendChild(nameSpan);
-
-            if (type === 'palette' && name !== 'Remove') {
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity';
-                removeBtn.innerHTML = `<i data-lucide="x" class="w-4 h-4"></i>`;
-                removeBtn.onclick = () => handleRemoveStaff(name);
-                el.appendChild(removeBtn);
-            }
-
-            el.draggable = true;
-            el.addEventListener('dragstart', (e) => handleDragStart(e, name, type, data));
-            el.addEventListener('dragend', handleDragEnd);
-            return el;
-        }
-
-        function createDroppableCell(rowIndex, colIndex) {
-            const cell = document.createElement('div');
-            const name = rosterData.schedule[rowIndex][colIndex];
-            cell.className = `h-16 flex items-center justify-center p-1 border-b border-r border-gray-200 transition-colors`;
-            
-            cell.addEventListener('dragover', handleDragOver);
-            cell.addEventListener('dragleave', handleDragLeave);
-            cell.addEventListener('drop', (e) => handleDrop(e, rowIndex, colIndex));
-
-            if (name) {
-                const data = { rowIndex, colIndex };
-                const nameEl = createDraggableName(name, 'cell', 'bg-blue-500 text-white w-full h-full flex items-center justify-center rounded-md text-sm', data);
-                cell.appendChild(nameEl);
-            }
-            return cell;
-        }
-
-        // --- Event Handlers ---
-        function handleAddStaff(e) {
-            e.preventDefault();
-            const newName = newStaffNameInput.value.trim();
-            if (newName && !staffMembers.includes(newName)) {
-                staffMembers.push(newName);
-                staffMembers.sort();
-                renderStaffPalette();
-                lucide.createIcons();
-            }
-            newStaffNameInput.value = '';
-        }
-
-        function handleRemoveStaff(nameToRemove) {
-            staffMembers = staffMembers.filter(name => name !== nameToRemove);
-            // Remove the staff member from the schedule
-            rosterData.schedule = rosterData.schedule.map(row => 
-                row.map(name => (name === nameToRemove ? '' : name))
-            );
-            render();
-        }
-
-        function handleDragStart(e, name, type, data) {
-            draggedItem = { name, type, data };
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', name);
-            setTimeout(() => e.target.closest('[draggable="true"]').classList.add('dragging'), 0);
-        }
-
-        function handleDragEnd(e) {
-            e.target.closest('[draggable="true"]').classList.remove('dragging');
-            draggedItem = null;
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-            const targetCell = e.target.closest('div[class*="border-b"]');
-            if (targetCell) {
-                targetCell.classList.add('drag-over');
-            }
-        }
-
-        function handleDragLeave(e) {
-             const targetCell = e.target.closest('div[class*="border-b"]');
-            if (targetCell) {
-                targetCell.classList.remove('drag-over');
-            }
-        }
-
-        function handleDrop(e, targetRowIndex, targetColIndex) {
-            e.preventDefault();
-            const targetCell = e.target.closest('div[class*="border-b"]');
-            if (targetCell) {
-                targetCell.classList.remove('drag-over');
-            }
-
-            if (!draggedItem) return;
-
-            const newName = draggedItem.name === 'Remove' ? '' : draggedItem.name;
-
-            if (draggedItem.type === 'cell') {
-                const origin = draggedItem.data;
-                rosterData.schedule[origin.rowIndex][origin.colIndex] = '';
-            }
-            
-            rosterData.schedule[targetRowIndex][targetColIndex] = newName;
-            renderRosterGrid();
-            lucide.createIcons();
-        }
-
-        // --- Initial Load ---
-        document.addEventListener('DOMContentLoaded', () => {
-            datePicker.addEventListener('change', (e) => {
-                rosterData.startDate = e.target.value;
-                render();
-            });
-            addStaffForm.addEventListener('submit', handleAddStaff);
-            render();
-        });
-
-    </script>
+<body>
+<p class="p1"><span class="s1">&lt;!DOCTYPE</span><span class="s2"> html</span><span class="s1">&gt;</span></p>
+<p class="p2"><span class="s3">&lt;</span><span class="s1">html</span><span class="s4"> </span><span class="s2">lang</span><span class="s3">=</span><span class="s5">"en"</span><span class="s3">&gt;</span></p>
+<p class="p2"><span class="s3">&lt;</span><span class="s1">head</span><span class="s3">&gt;</span></p>
+<p class="p3"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;</span><span class="s6">meta</span><span class="s4"> </span><span class="s1">charset</span><span class="s3">=</span><span class="s5">"UTF-8"</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;</span><span class="s6">meta</span><span class="s4"> </span><span class="s2">name</span><span class="s3">=</span><span class="s1">"viewport"</span><span class="s4"> </span><span class="s2">content</span><span class="s3">=</span><span class="s1">"width=device-width, initial-scale=1.0"</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;</span><span class="s6">title</span><span class="s3">&gt;</span><span class="s1">Weekly Staff Roster Editor</span><span class="s3">&lt;/</span><span class="s6">title</span><span class="s3">&gt;</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s1">&lt;!-- Tailwind CSS CDN --&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;</span><span class="s6">script</span><span class="s4"> </span><span class="s2">src</span><span class="s3">=</span><span class="s1">"https://cdn.tailwindcss.com"</span><span class="s3">&gt;&lt;/</span><span class="s6">script</span><span class="s3">&gt;</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s1">&lt;!-- Google Fonts: Inter --&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;</span><span class="s6">link</span><span class="s4"> </span><span class="s2">rel</span><span class="s3">=</span><span class="s1">"preconnect"</span><span class="s4"> </span><span class="s2">href</span><span class="s3">=</span><span class="s1">"https://fonts.googleapis.com"</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;</span><span class="s6">link</span><span class="s4"> </span><span class="s2">rel</span><span class="s3">=</span><span class="s1">"preconnect"</span><span class="s4"> </span><span class="s2">href</span><span class="s3">=</span><span class="s1">"https://fonts.gstatic.com"</span><span class="s4"> </span><span class="s2">crossorigin</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;</span><span class="s6">link</span><span class="s4"> </span><span class="s2">href</span><span class="s3">=</span><span class="s1">"https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap"</span><span class="s4"> </span><span class="s2">rel</span><span class="s3">=</span><span class="s1">"stylesheet"</span><span class="s3">&gt;</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s1">&lt;!-- Lucide Icons --&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;</span><span class="s6">script</span><span class="s4"> </span><span class="s2">src</span><span class="s3">=</span><span class="s1">"https://cdn.jsdelivr.net/npm/lucide-static@latest/umd/lucide.js"</span><span class="s3">&gt;&lt;/</span><span class="s6">script</span><span class="s3">&gt;</span></p>
+<p class="p2"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;</span><span class="s1">style</span><span class="s3">&gt;</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">/* Custom styles */</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s6">body</span><span class="s1"> {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s2">font-family:</span><span class="s1"> </span><span class="s7">'Inter'</span><span class="s1">, </span><span class="s8">sans-serif</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">/* Style for the scrollbar to be more subtle */</span></p>
+<p class="p2"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">.roster-container::-webkit-scrollbar</span><span class="s4"> {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s2">height:</span><span class="s1"> </span><span class="s9">8px</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">.roster-container::-webkit-scrollbar-track</span><span class="s4"> {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s2">background:</span><span class="s1"> </span><span class="s8">#f1f5f9</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">.roster-container::-webkit-scrollbar-thumb</span><span class="s4"> {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s2">background:</span><span class="s1"> </span><span class="s8">#cbd5e1</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s2">border-radius:</span><span class="s1"> </span><span class="s9">4px</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">.roster-container::-webkit-scrollbar-thumb:hover</span><span class="s4"> {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s2">background:</span><span class="s1"> </span><span class="s8">#94a3b8</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">/* Class for the element being dragged */</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s6">.dragging</span><span class="s1"> {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s2">opacity:</span><span class="s1"> </span><span class="s9">0.5</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s2">transform:</span><span class="s1"> </span><span class="s8">scale(</span><span class="s9">0.95</span><span class="s8">)</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">/* Class for highlighting a valid drop zone */</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s6">.drag-over</span><span class="s1"> {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s2">outline:</span><span class="s1"> </span><span class="s9">2px</span><span class="s1"> </span><span class="s8">dashed</span><span class="s1"> </span><span class="s8">#3b82f6</span><span class="s1">;</span></p>
+<p class="p3"><span class="s4"><span class="Apple-converted-space">            </span></span><span class="s1">outline-offset:</span><span class="s4"> </span><span class="s9">-2px</span><span class="s4">;</span></p>
+<p class="p3"><span class="s4"><span class="Apple-converted-space">            </span></span><span class="s1">background-color:</span><span class="s4"> </span><span class="s8">#eff6ff</span><span class="s4">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">/* Grab cursor for draggable items */</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>[</span><span class="s8">draggable</span><span class="s1">=</span><span class="s7">"true"</span><span class="s1">] {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s2">cursor:</span><span class="s1"> </span><span class="s8">grab</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>[</span><span class="s8">draggable</span><span class="s1">=</span><span class="s7">"true"</span><span class="s1">]</span><span class="s6">:active</span><span class="s1"> {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s2">cursor:</span><span class="s1"> </span><span class="s8">grabbing</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p2"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;/</span><span class="s1">style</span><span class="s3">&gt;</span></p>
+<p class="p2"><span class="s3">&lt;/</span><span class="s1">head</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s3">&lt;</span><span class="s6">body</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8"</span><span class="s3">&gt;</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;</span><span class="s6">div</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"w-full max-w-screen-2xl mx-auto"</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s3">&lt;</span><span class="s6">div</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"p-6 bg-white rounded-xl shadow-lg mb-8"</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">            </span></span><span class="s3">&lt;</span><span class="s6">div</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4"</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                    </span></span><span class="s3">&lt;</span><span class="s6">h1</span><span class="s1"> </span><span class="s2">class</span><span class="s3">=</span><span class="s5">"text-2xl font-bold text-gray-800"</span><span class="s3">&gt;</span><span class="s1">Weekly Roster Editor</span><span class="s3">&lt;/</span><span class="s6">h1</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                    </span></span><span class="s3">&lt;</span><span class="s6">p</span><span class="s4"> </span><span class="s2">id</span><span class="s3">=</span><span class="s1">"roster-date-range"</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"text-gray-500 mt-1"</span><span class="s3">&gt;&lt;/</span><span class="s6">p</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;/</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;</span><span class="s6">div</span><span class="s1"> </span><span class="s2">class</span><span class="s3">=</span><span class="s5">"flex-shrink-0"</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                    </span></span><span class="s3">&lt;</span><span class="s6">label</span><span class="s4"> </span><span class="s2">for</span><span class="s3">=</span><span class="s1">"start-date-picker"</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"block text-sm font-medium text-gray-700 mb-1"</span><span class="s3">&gt;</span><span class="s4">Start of Week</span><span class="s3">&lt;/</span><span class="s6">label</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                    </span></span><span class="s3">&lt;</span><span class="s6">input</span><span class="s4"> </span><span class="s2">type</span><span class="s3">=</span><span class="s1">"date"</span><span class="s4"> </span><span class="s2">id</span><span class="s3">=</span><span class="s1">"start-date-picker"</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;/</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s3">&lt;/</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s3">&lt;/</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s3">&lt;</span><span class="s6">div</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"flex flex-col lg:flex-row gap-8"</span><span class="s3">&gt;</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">            </span></span><span class="s1">&lt;!-- Staff Palette --&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">            </span></span><span class="s3">&lt;</span><span class="s6">aside</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"lg:w-72 bg-white rounded-xl shadow-lg p-6 h-fit"</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;</span><span class="s6">h2</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"text-xl font-bold text-gray-800 mb-4"</span><span class="s3">&gt;</span><span class="s4">Staff Management</span><span class="s3">&lt;/</span><span class="s6">h2</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;</span><span class="s6">form</span><span class="s4"> </span><span class="s2">id</span><span class="s3">=</span><span class="s1">"add-staff-form"</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"flex gap-2 mb-4"</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                    </span></span><span class="s3">&lt;</span><span class="s6">input</span><span class="s4"> </span><span class="s2">type</span><span class="s3">=</span><span class="s1">"text"</span><span class="s4"> </span><span class="s2">id</span><span class="s3">=</span><span class="s1">"new-staff-name"</span><span class="s4"> </span><span class="s2">placeholder</span><span class="s3">=</span><span class="s1">"Add new staff..."</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"</span><span class="s4"> </span><span class="s2">required</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                    </span></span><span class="s3">&lt;</span><span class="s6">button</span><span class="s4"> </span><span class="s2">type</span><span class="s3">=</span><span class="s1">"submit"</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center"</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                        </span></span><span class="s3">&lt;</span><span class="s6">i</span><span class="s1"> </span><span class="s2">data-lucide</span><span class="s3">=</span><span class="s5">"plus"</span><span class="s1"> </span><span class="s2">class</span><span class="s3">=</span><span class="s5">"w-5 h-5"</span><span class="s3">&gt;&lt;/</span><span class="s6">i</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                    </span></span><span class="s3">&lt;/</span><span class="s6">button</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;/</span><span class="s6">form</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;</span><span class="s6">div</span><span class="s4"> </span><span class="s2">id</span><span class="s3">=</span><span class="s1">"staff-palette"</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"space-y-3"</span><span class="s3">&gt;</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">                    </span></span><span class="s1">&lt;!-- Draggable staff names will be generated here by JavaScript --&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;/</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s3">&lt;/</span><span class="s6">aside</span><span class="s3">&gt;</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">            </span></span><span class="s1">&lt;!-- Roster --&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s3">&lt;</span><span class="s6">main</span><span class="s1"> </span><span class="s2">class</span><span class="s3">=</span><span class="s5">"flex-1"</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;</span><span class="s6">div</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"w-full bg-white rounded-xl shadow-lg overflow-hidden"</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                    </span></span><span class="s3">&lt;</span><span class="s6">div</span><span class="s4"> </span><span class="s2">id</span><span class="s3">=</span><span class="s1">"roster-container"</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"roster-container overflow-x-auto"</span><span class="s3">&gt;</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">                        </span></span><span class="s1">&lt;!-- Roster will be generated here by JavaScript --&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                    </span></span><span class="s3">&lt;/</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;/</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">                </span></span><span class="s1">&lt;!-- Notes Section --&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;</span><span class="s6">div</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"w-full bg-white rounded-xl shadow-lg overflow-hidden mt-8"</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                     </span></span><span class="s3">&lt;</span><span class="s6">h2</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"text-xl font-bold text-gray-800 p-6 border-b"</span><span class="s3">&gt;</span><span class="s4">Daily Notes</span><span class="s3">&lt;/</span><span class="s6">h2</span><span class="s3">&gt;</span></p>
+<p class="p4"><span class="s4"><span class="Apple-converted-space">                    </span></span><span class="s3">&lt;</span><span class="s6">div</span><span class="s4"> </span><span class="s2">id</span><span class="s3">=</span><span class="s1">"notes-container"</span><span class="s4"> </span><span class="s2">class</span><span class="s3">=</span><span class="s1">"grid grid-cols-1 md:grid-cols-7"</span><span class="s3">&gt;</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">                        </span></span><span class="s1">&lt;!-- Notes textareas will be generated here --&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                    </span></span><span class="s3">&lt;/</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s3">&lt;/</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s3">&lt;/</span><span class="s6">main</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s3">&lt;/</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;/</span><span class="s6">div</span><span class="s3">&gt;</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p2"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;</span><span class="s1">script</span><span class="s3">&gt;</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">// --- Data Model ---</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">let</span><span class="s1"> staffMembers = [</span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">            </span></span><span class="s1">'Chrissy'</span><span class="s4">, </span><span class="s1">'Gemma'</span><span class="s4">, </span><span class="s1">'Jodie'</span><span class="s4">, </span><span class="s1">'Niamh'</span><span class="s4">, </span><span class="s1">'Julie'</span><span class="s4">, </span><span class="s1">'MacKenzie'</span><span class="s4">,<span class="Apple-converted-space"> </span></span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">            </span></span><span class="s1">'India'</span><span class="s4">, </span><span class="s1">'Zack'</span><span class="s4">, </span><span class="s1">'Charlie'</span><span class="s4">, </span><span class="s1">'Else'</span><span class="s4">, </span><span class="s1">'Simon'</span><span class="s4">, </span><span class="s1">'Alex'</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>];</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">// Function to create an empty 20x7 grid</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">const</span><span class="s1"> createEmptySchedule = () =&gt; </span><span class="s12">Array</span><span class="s1">.</span><span class="s11">from</span><span class="s1">({ length: </span><span class="s13">20</span><span class="s1"> }, () =&gt; </span><span class="s12">Array</span><span class="s1">(</span><span class="s13">7</span><span class="s1">).fill(</span><span class="s7">''</span><span class="s1">));</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">let</span><span class="s1"> rosterData = {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>startDate: </span><span class="s7">'2025-04-21'</span><span class="s1">,</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>schedule: createEmptySchedule(),</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>notes: </span><span class="s12">Array</span><span class="s1">(</span><span class="s13">7</span><span class="s1">).fill(</span><span class="s7">''</span><span class="s1">)</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>};</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">// --- State for Drag &amp; Drop ---</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">let</span><span class="s1"> draggedItem = </span><span class="s11">null</span><span class="s1">;</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">// --- DOM Elements ---</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">const</span><span class="s1"> staffPalette = document.getElementById(</span><span class="s7">'staff-palette'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">const</span><span class="s1"> rosterContainer = document.getElementById(</span><span class="s7">'roster-container'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">const</span><span class="s1"> notesContainer = document.getElementById(</span><span class="s7">'notes-container'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">const</span><span class="s1"> rosterDateRangeEl = document.getElementById(</span><span class="s7">'roster-date-range'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">const</span><span class="s1"> datePicker = document.getElementById(</span><span class="s7">'start-date-picker'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">const</span><span class="s1"> addStaffForm = document.getElementById(</span><span class="s7">'add-staff-form'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">const</span><span class="s1"> newStaffNameInput = document.getElementById(</span><span class="s7">'new-staff-name'</span><span class="s1">);</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">// --- Main Render Function ---</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> render() {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>renderDateDisplay();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>renderStaffPalette();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>renderRosterGrid();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>renderNotes();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>lucide.createIcons(); </span><span class="s14">// Re-render icons</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> renderDateDisplay() {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> startDate = </span><span class="s11">new</span><span class="s1"> </span><span class="s12">Date</span><span class="s1">(rosterData.startDate + </span><span class="s7">'T00:00:00'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> endDate = </span><span class="s11">new</span><span class="s1"> </span><span class="s12">Date</span><span class="s1">(startDate);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>endDate.setDate(startDate.getDate() + </span><span class="s13">6</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> dateFormatter = </span><span class="s11">new</span><span class="s1"> </span><span class="s12">Intl</span><span class="s1">.</span><span class="s12">DateTimeFormat</span><span class="s1">(</span><span class="s7">'en-US'</span><span class="s1">, { month: </span><span class="s7">'short'</span><span class="s1">, day: </span><span class="s7">'numeric'</span><span class="s1">, year: </span><span class="s7">'numeric'</span><span class="s1"> });</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>rosterDateRangeEl.textContent = </span><span class="s7">`</span><span class="s1">${dateFormatter.format(startDate)}</span><span class="s7"> - </span><span class="s1">${dateFormatter.format(endDate)}</span><span class="s7">`</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>datePicker.value = rosterData.startDate;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> renderStaffPalette() {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>staffPalette.innerHTML = </span><span class="s7">''</span><span class="s1">; </span><span class="s14">// Clear previous content</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>staffMembers.forEach(name =&gt; {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> staffEl = createDraggableName(name, </span><span class="s7">'palette'</span><span class="s1">, </span><span class="s7">'bg-gray-200 text-gray-800 group'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>staffPalette.appendChild(staffEl);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> removeEl = createDraggableName(</span><span class="s7">'Remove'</span><span class="s1">, </span><span class="s7">'palette'</span><span class="s1">, </span><span class="s7">'bg-red-200 text-red-800'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>staffPalette.appendChild(removeEl);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> renderRosterGrid() {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>rosterContainer.innerHTML = </span><span class="s7">''</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> grid = document.createElement(</span><span class="s7">'div'</span><span class="s1">);</span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">            </span>grid.className = </span><span class="s1">'grid grid-cols-7 min-w-[1200px]'</span><span class="s4">;</span></p>
+<p class="p7"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> headerRow = createHeader();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>grid.appendChild(headerRow);</span></p>
+<p class="p7"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>rosterData.schedule.forEach((row, rowIndex) =&gt; {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>row.forEach((name, colIndex) =&gt; {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                    </span></span><span class="s11">const</span><span class="s1"> cell = createDroppableCell(rowIndex, colIndex);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                    </span>grid.appendChild(cell);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>});</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>rosterContainer.appendChild(grid);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> renderNotes() {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>notesContainer.innerHTML = </span><span class="s7">''</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">for</span><span class="s1">(</span><span class="s11">let</span><span class="s1"> i = </span><span class="s13">0</span><span class="s1">; i &lt; </span><span class="s13">7</span><span class="s1">; i++) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> noteWrapper = document.createElement(</span><span class="s7">'div'</span><span class="s1">);</span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">                </span>noteWrapper.className = </span><span class="s1">'p-4 border-b md:border-b-0 md:border-r border-gray-200'</span><span class="s4">;</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> textArea = document.createElement(</span><span class="s7">'textarea'</span><span class="s1">);</span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">                </span>textArea.className = </span><span class="s1">'w-full h-24 p-2 border border-gray-200 rounded-md resize-none focus:ring-blue-500 focus:border-blue-500'</span><span class="s4">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>textArea.placeholder = </span><span class="s7">`Notes for day </span><span class="s1">${i + </span><span class="s13">1</span><span class="s1">}</span><span class="s7">...`</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>textArea.value = rosterData.notes[i];</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>textArea.addEventListener(</span><span class="s7">'input'</span><span class="s1">, (e) =&gt; {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                    </span>rosterData.notes[i] = e.target.value;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>});</span></p>
+<p class="p7"><span class="s1"><span class="Apple-converted-space">                </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>noteWrapper.appendChild(textArea);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>notesContainer.appendChild(noteWrapper);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">// --- Element Creation Helpers ---</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> createHeader() {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> headerRow = document.createElement(</span><span class="s7">'div'</span><span class="s1">);</span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">            </span>headerRow.className = </span><span class="s1">'col-span-7 grid grid-cols-7 sticky top-0 bg-white z-10'</span><span class="s4">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> startDate = </span><span class="s11">new</span><span class="s1"> </span><span class="s12">Date</span><span class="s1">(rosterData.startDate + </span><span class="s7">'T00:00:00'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> dayFormatter = </span><span class="s11">new</span><span class="s1"> </span><span class="s12">Intl</span><span class="s1">.</span><span class="s12">DateTimeFormat</span><span class="s1">(</span><span class="s7">'en-US'</span><span class="s1">, { weekday: </span><span class="s7">'short'</span><span class="s1">, day: </span><span class="s7">'2-digit'</span><span class="s1">, month: </span><span class="s7">'short'</span><span class="s1"> });</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">for</span><span class="s1"> (</span><span class="s11">let</span><span class="s1"> i = </span><span class="s13">0</span><span class="s1">; i &lt; </span><span class="s13">7</span><span class="s1">; i++) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> currentDate = </span><span class="s11">new</span><span class="s1"> </span><span class="s12">Date</span><span class="s1">(startDate);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>currentDate.setDate(startDate.getDate() + i);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> parts = dayFormatter.formatToParts(currentDate);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> weekday = parts.find(p =&gt; p.type === </span><span class="s7">'weekday'</span><span class="s1">).value;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> day = parts.find(p =&gt; p.type === </span><span class="s7">'day'</span><span class="s1">).value;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> month = parts.find(p =&gt; p.type === </span><span class="s7">'month'</span><span class="s1">).value;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> dayCell = document.createElement(</span><span class="s7">'div'</span><span class="s1">);</span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">                </span>dayCell.className = </span><span class="s1">'text-center font-semibold text-gray-700 p-3 border-b-2 border-r border-gray-200'</span><span class="s4">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>dayCell.textContent = </span><span class="s7">`</span><span class="s1">${weekday}</span><span class="s7"> </span><span class="s1">${day}</span><span class="s7"> </span><span class="s1">${month}</span><span class="s7">`</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>headerRow.appendChild(dayCell);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">return</span><span class="s1"> headerRow;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> createDraggableName(name, type, styleClasses, data = {}) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> el = document.createElement(</span><span class="s7">'div'</span><span class="s1">);</span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">            </span>el.className = </span><span class="s1">`p-2 rounded-md font-medium text-center transition-all flex justify-between items-center </span><span class="s4">${styleClasses}</span><span class="s1">`</span><span class="s4">;</span></p>
+<p class="p7"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> nameSpan = document.createElement(</span><span class="s7">'span'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>nameSpan.textContent = name;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>el.appendChild(nameSpan);</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">if</span><span class="s1"> (type === </span><span class="s7">'palette'</span><span class="s1"> &amp;&amp; name !== </span><span class="s7">'Remove'</span><span class="s1">) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> removeBtn = document.createElement(</span><span class="s7">'button'</span><span class="s1">);</span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">                </span>removeBtn.className = </span><span class="s1">'text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity'</span><span class="s4">;</span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">                </span>removeBtn.innerHTML = </span><span class="s1">`&lt;i data-lucide="x" class="w-4 h-4"&gt;&lt;/i&gt;`</span><span class="s4">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>removeBtn.onclick = () =&gt; handleRemoveStaff(name);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>el.appendChild(removeBtn);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>el.draggable = </span><span class="s11">true</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>el.addEventListener(</span><span class="s7">'dragstart'</span><span class="s1">, (e) =&gt; handleDragStart(e, name, type, data));</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>el.addEventListener(</span><span class="s7">'dragend'</span><span class="s1">, handleDragEnd);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">return</span><span class="s1"> el;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> createDroppableCell(rowIndex, colIndex) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> cell = document.createElement(</span><span class="s7">'div'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> name = rosterData.schedule[rowIndex][colIndex];</span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">            </span>cell.className = </span><span class="s1">`h-16 flex items-center justify-center p-1 border-b border-r border-gray-200 transition-colors`</span><span class="s4">;</span></p>
+<p class="p7"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>cell.addEventListener(</span><span class="s7">'dragover'</span><span class="s1">, handleDragOver);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>cell.addEventListener(</span><span class="s7">'dragleave'</span><span class="s1">, handleDragLeave);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>cell.addEventListener(</span><span class="s7">'drop'</span><span class="s1">, (e) =&gt; handleDrop(e, rowIndex, colIndex));</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">if</span><span class="s1"> (name) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> data = { rowIndex, colIndex };</span></p>
+<p class="p8"><span class="s4"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s4"> nameEl = createDraggableName(name, </span><span class="s1">'cell'</span><span class="s4">, </span><span class="s1">'bg-blue-500 text-white w-full h-full flex items-center justify-center rounded-md text-sm'</span><span class="s4">, data);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>cell.appendChild(nameEl);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">return</span><span class="s1"> cell;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">// --- Event Handlers ---</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> handleAddStaff(e) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>e.preventDefault();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> newName = newStaffNameInput.value.trim();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">if</span><span class="s1"> (newName &amp;&amp; !staffMembers.includes(newName)) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>staffMembers.push(newName);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>staffMembers.sort();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>renderStaffPalette();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>lucide.createIcons();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>newStaffNameInput.value = </span><span class="s7">''</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> handleRemoveStaff(nameToRemove) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>staffMembers = staffMembers.filter(name =&gt; name !== nameToRemove);</span></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">            </span></span><span class="s1">// Remove the staff member from the schedule</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>rosterData.schedule = rosterData.schedule.map(row =&gt;<span class="Apple-converted-space"> </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>row.map(name =&gt; (name === nameToRemove ? </span><span class="s7">''</span><span class="s1"> : name))</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>render();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> handleDragStart(e, name, type, data) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>draggedItem = { name, type, data };</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>e.dataTransfer.effectAllowed = </span><span class="s7">'move'</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>e.dataTransfer.setData(</span><span class="s7">'text/plain'</span><span class="s1">, name);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>setTimeout(() =&gt; e.target.closest(</span><span class="s7">'[draggable="true"]'</span><span class="s1">).classList.add(</span><span class="s7">'dragging'</span><span class="s1">), </span><span class="s13">0</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> handleDragEnd(e) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>e.target.closest(</span><span class="s7">'[draggable="true"]'</span><span class="s1">).classList.remove(</span><span class="s7">'dragging'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>draggedItem = </span><span class="s11">null</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> handleDragOver(e) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>e.preventDefault();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> targetCell = e.target.closest(</span><span class="s7">'div[class*="border-b"]'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">if</span><span class="s1"> (targetCell) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>targetCell.classList.add(</span><span class="s7">'drag-over'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> handleDragLeave(e) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">             </span></span><span class="s11">const</span><span class="s1"> targetCell = e.target.closest(</span><span class="s7">'div[class*="border-b"]'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">if</span><span class="s1"> (targetCell) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>targetCell.classList.remove(</span><span class="s7">'drag-over'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span></span><span class="s11">function</span><span class="s1"> handleDrop(e, targetRowIndex, targetColIndex) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>e.preventDefault();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> targetCell = e.target.closest(</span><span class="s7">'div[class*="border-b"]'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">if</span><span class="s1"> (targetCell) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>targetCell.classList.remove(</span><span class="s7">'drag-over'</span><span class="s1">);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">if</span><span class="s1"> (!draggedItem) </span><span class="s11">return</span><span class="s1">;</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">const</span><span class="s1"> newName = draggedItem.name === </span><span class="s7">'Remove'</span><span class="s1"> ? </span><span class="s7">''</span><span class="s1"> : draggedItem.name;</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span></span><span class="s11">if</span><span class="s1"> (draggedItem.type === </span><span class="s7">'cell'</span><span class="s1">) {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span></span><span class="s11">const</span><span class="s1"> origin = draggedItem.data;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>rosterData.schedule[origin.rowIndex][origin.colIndex] = </span><span class="s7">''</span><span class="s1">;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
+<p class="p7"><span class="s1"><span class="Apple-converted-space">            </span></span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>rosterData.schedule[targetRowIndex][targetColIndex] = newName;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>renderRosterGrid();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>lucide.createIcons();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>}</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p6"><span class="s4"><span class="Apple-converted-space">        </span></span><span class="s1">// --- Initial Load ---</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>document.addEventListener(</span><span class="s7">'DOMContentLoaded'</span><span class="s1">, () =&gt; {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>datePicker.addEventListener(</span><span class="s7">'change'</span><span class="s1">, (e) =&gt; {</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>rosterData.startDate = e.target.value;</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">                </span>render();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>});</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>addStaffForm.addEventListener(</span><span class="s7">'submit'</span><span class="s1">, handleAddStaff);</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">            </span>render();</span></p>
+<p class="p5"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p2"><span class="s4"><span class="Apple-converted-space">    </span></span><span class="s3">&lt;/</span><span class="s1">script</span><span class="s3">&gt;</span></p>
+<p class="p2"><span class="s3">&lt;/</span><span class="s1">body</span><span class="s3">&gt;</span></p>
+<p class="p2"><span class="s3">&lt;/</span><span class="s1">html</span><span class="s3">&gt;</span></p>
+<p class="p7"><span class="s10"></span><br></p>
+<p class="p7"><span class="s10"></span><br></p>
 </body>
 </html>
-
