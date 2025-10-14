@@ -10,44 +10,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons (DEFER attribute added) -->
+    <!-- Lucide Icons -->
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/umd/lucide.js"></script>
     <style>
         /* Custom styles */
         body {
             font-family: 'Inter', sans-serif;
         }
-        /* Style for the scrollbar to be more subtle */
-        .roster-container::-webkit-scrollbar {
-            height: 8px;
-        }
-        .roster-container::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        .roster-container::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-        .roster-container::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-        /* Class for the element being dragged */
-        .dragging {
-            opacity: 0.5;
-            transform: scale(0.95);
-        }
-        /* Class for highlighting a valid drop zone */
-        .drag-over {
-            outline: 2px dashed #3b82f6;
-            outline-offset: -2px;
-            background-color: #eff6ff;
-        }
-        /* Grab cursor for draggable items */
-        [draggable="true"] {
-            cursor: grab;
-        }
-        [draggable="true"]:active {
-            cursor: grabbing;
+        .roster-container::-webkit-scrollbar { height: 8px; }
+        .roster-container::-webkit-scrollbar-track { background: #f1f5f9; }
+        .roster-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .roster-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .dragging { opacity: 0.5; transform: scale(0.95); }
+        .drag-over { outline: 2px dashed #3b82f6; outline-offset: -2px; background-color: #eff6ff; }
+        [draggable="true"] { cursor: grab; }
+        [draggable="true"]:active { cursor: grabbing; }
+        .modal-backdrop {
+            transition: opacity 0.3s ease;
         }
     </style>
 </head>
@@ -60,9 +39,15 @@
                     <h1 class="text-2xl font-bold text-gray-800">Weekly Roster Editor</h1>
                     <p id="roster-date-range" class="text-gray-500 mt-1"></p>
                 </div>
-                <div class="flex-shrink-0">
-                    <label for="start-date-picker" class="block text-sm font-medium text-gray-700 mb-1">Start of Week</label>
-                    <input type="date" id="start-date-picker" class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <div class="flex items-center gap-4">
+                    <button id="share-button" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                        <i data-lucide="share-2" class="w-5 h-5"></i>
+                        Share / Embed
+                    </button>
+                    <div class="flex-shrink-0">
+                        <label for="start-date-picker" class="block text-sm font-medium text-gray-700 mb-1">Start of Week</label>
+                        <input type="date" id="start-date-picker" class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
                 </div>
             </div>
         </div>
@@ -71,6 +56,7 @@
             <!-- Staff Palette -->
             <aside class="lg:w-72 bg-white rounded-xl shadow-lg p-6 h-fit">
                 <h2 class="text-xl font-bold text-gray-800 mb-4">Staff Management</h2>
+                <p class="text-sm text-gray-500 mb-4 -mt-2">Right-click a name to remove.</p>
                 <form id="add-staff-form" class="flex gap-2 mb-4">
                     <input type="text" id="new-staff-name" placeholder="Add new staff..." class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
                     <input type="color" id="new-staff-color" value="#a3a3a3" class="p-1 h-10 w-10 border border-gray-300 rounded-md cursor-pointer">
@@ -79,7 +65,7 @@
                     </button>
                 </form>
                 <div id="staff-palette" class="space-y-3">
-                    <!-- Draggable staff names will be generated here by JavaScript -->
+                    <!-- Draggable staff names will be generated here -->
                 </div>
             </aside>
 
@@ -87,7 +73,7 @@
             <main class="flex-1">
                 <div class="w-full bg-white rounded-xl shadow-lg overflow-hidden">
                     <div id="roster-container" class="roster-container overflow-x-auto">
-                        <!-- Roster will be generated here by JavaScript -->
+                        <!-- Roster will be generated here -->
                     </div>
                 </div>
                 <!-- Notes Section -->
@@ -100,32 +86,42 @@
             </main>
         </div>
     </div>
+    
+    <!-- Share Modal -->
+    <div id="share-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50 modal-backdrop opacity-0 pointer-events-none">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl transform scale-95 transition-transform duration-300">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">Share or Embed Your Roster</h2>
+                <button id="close-modal-button" class="text-gray-500 hover:text-gray-800">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <p class="text-gray-600 mb-4">Use the link for sharing, or copy the HTML code to embed this roster on a website like Google Sites.</p>
+            
+            <div class="mb-6">
+                <label for="share-link" class="block text-sm font-medium text-gray-700 mb-1">Shareable Link (View-Only)</label>
+                <input id="share-link" type="text" readonly class="w-full p-2 border border-gray-300 rounded-md bg-gray-50">
+            </div>
+
+            <div>
+                <label for="embed-code" class="block text-sm font-medium text-gray-700 mb-1">Embed Code</label>
+                <textarea id="embed-code" readonly class="w-full p-2 border border-gray-300 rounded-md bg-gray-50 h-32 resize-none"></textarea>
+            </div>
+            <div class="mt-4 text-right">
+                <button id="copy-embed-code" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 ml-auto">
+                    <i data-lucide="copy" class="w-5 h-5"></i>
+                    <span id="copy-button-text">Copy Code</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
 
     <script>
+    document.addEventListener('DOMContentLoaded', () => {
         // --- Data Model ---
-        let staffMembers = [
-            { name: 'Chrissy', color: '#60a5fa' },
-            { name: 'Gemma', color: '#f87171' },
-            { name: 'Jodie', color: '#4ade80' },
-            { name: 'Niamh', color: '#fbbf24' },
-            { name: 'Julie', color: '#a78bfa' },
-            { name: 'MacKenzie', color: '#34d399' },
-            { name: 'India', color: '#f472b6' },
-            { name: 'Zack', color: '#fb923c' },
-            { name: 'Charlie', color: '#2dd4bf' },
-            { name: 'Else', color: '#a3a3a3' },
-            { name: 'Simon', color: '#93c5fd' },
-            { name: 'Alex', color: '#c084fc' }
-        ];
-
-        // Function to create an empty 20x7 grid
-        const createEmptySchedule = () => Array.from({ length: 20 }, () => Array(7).fill(''));
-
-        let rosterData = {
-            startDate: '2025-04-21',
-            schedule: createEmptySchedule(),
-            notes: Array(7).fill('')
-        };
+        let staffMembers = [];
+        let rosterData = {};
 
         // --- State for Drag & Drop ---
         let draggedItem = null;
@@ -139,6 +135,50 @@
         const addStaffForm = document.getElementById('add-staff-form');
         const newStaffNameInput = document.getElementById('new-staff-name');
         const newStaffColorInput = document.getElementById('new-staff-color');
+        // Modal elements
+        const shareButton = document.getElementById('share-button');
+        const shareModal = document.getElementById('share-modal');
+        const closeModalButton = document.getElementById('close-modal-button');
+        const shareLinkInput = document.getElementById('share-link');
+        const embedCodeTextarea = document.getElementById('embed-code');
+        const copyEmbedCodeButton = document.getElementById('copy-embed-code');
+        const copyButtonText = document.getElementById('copy-button-text');
+
+
+        // --- Data Persistence ---
+        function saveDataToLocalStorage() {
+            const appData = { staffMembers, rosterData };
+            localStorage.setItem('rosterAppData', JSON.stringify(appData));
+        }
+
+        function loadDataFromLocalStorage() {
+            const savedData = localStorage.getItem('rosterAppData');
+            if (savedData) {
+                const appData = JSON.parse(savedData);
+                staffMembers = appData.staffMembers || [];
+                rosterData = appData.rosterData || createDefaultRosterData();
+            } else {
+                // If no saved data, load defaults
+                staffMembers = [
+                    { name: 'Chrissy', color: '#60a5fa' }, { name: 'Gemma', color: '#f87171' },
+                    { name: 'Jodie', color: '#4ade80' }, { name: 'Niamh', color: '#fbbf24' },
+                    { name: 'Julie', color: '#a78bfa' }, { name: 'MacKenzie', color: '#34d399' },
+                    { name: 'India', color: '#f472b6' }, { name: 'Zack', color: '#fb923c' },
+                    { name: 'Charlie', color: '#2dd4bf' }, { name: 'Else', color: '#a3a3a3' },
+                    { name: 'Simon', color: '#93c5fd' }, { name: 'Alex', color: '#c084fc' }
+                ];
+                rosterData = createDefaultRosterData();
+            }
+        }
+
+        function createDefaultRosterData() {
+            const createEmptySchedule = () => Array.from({ length: 20 }, () => Array(7).fill(''));
+            return {
+                startDate: '2025-04-21',
+                schedule: createEmptySchedule(),
+                notes: Array(7).fill('')
+            };
+        }
 
         // --- Helper Functions ---
         function getContrastingTextColor(hexcolor) {
@@ -148,7 +188,7 @@
             const g = parseInt(hexcolor.substr(2, 2), 16);
             const b = parseInt(hexcolor.substr(4, 2), 16);
             const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-            return (yiq >= 128) ? '#1f2937' : '#ffffff'; // Using Tailwind gray-800 for black
+            return (yiq >= 128) ? '#1f2937' : '#ffffff';
         }
         
         // --- Main Render Function ---
@@ -170,7 +210,7 @@
         }
 
         function renderStaffPalette() {
-            staffPalette.innerHTML = ''; // Clear previous content
+            staffPalette.innerHTML = ''; 
             staffMembers.forEach(staff => {
                 const staffEl = createDraggableName(staff.name, 'palette');
                 staffPalette.appendChild(staffEl);
@@ -205,9 +245,10 @@
                 const textArea = document.createElement('textarea');
                 textArea.className = 'w-full h-24 p-2 border border-gray-200 rounded-md resize-none focus:ring-blue-500 focus:border-blue-500';
                 textArea.placeholder = `Notes for day ${i + 1}...`;
-                textArea.value = rosterData.notes[i];
+                textArea.value = rosterData.notes[i] || '';
                 textArea.addEventListener('input', (e) => {
                     rosterData.notes[i] = e.target.value;
+                    saveDataToLocalStorage();
                 });
                 
                 noteWrapper.appendChild(textArea);
@@ -261,37 +302,30 @@
                     el.classList.add('bg-gray-200', 'text-gray-800');
                     el.appendChild(nameSpan);
 
+                    el.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        handleRemoveStaff(name);
+                    });
+
                     const controlsWrapper = document.createElement('div');
                     controlsWrapper.className = 'flex items-center gap-2';
-
                     const colorPickerLabel = document.createElement('label');
                     colorPickerLabel.className = 'relative w-6 h-6 rounded-full border-2 border-white shadow-sm cursor-pointer';
                     colorPickerLabel.style.backgroundColor = staffMember.color;
-
                     const colorInput = document.createElement('input');
                     colorInput.type = 'color';
                     colorInput.value = staffMember.color;
                     colorInput.className = 'absolute inset-0 w-full h-full opacity-0 cursor-pointer';
-
                     colorInput.addEventListener('input', (e) => {
                         colorPickerLabel.style.backgroundColor = e.target.value;
                     });
                     colorInput.addEventListener('change', (e) => {
                         staffMember.color = e.target.value;
                         render();
+                        saveDataToLocalStorage();
                     });
-
                     colorPickerLabel.appendChild(colorInput);
                     controlsWrapper.appendChild(colorPickerLabel);
-
-                    const removeBtn = document.createElement('button');
-                    removeBtn.className = 'text-gray-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity';
-                    removeBtn.innerHTML = `<i data-lucide="x" class="w-4 h-4"></i>`;
-                    removeBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        handleRemoveStaff(name);
-                    };
-                    controlsWrapper.appendChild(removeBtn);
                     el.appendChild(controlsWrapper);
                 }
             }
@@ -324,6 +358,7 @@
                 staffMembers.push({ name: newName, color: newColor });
                 staffMembers.sort((a, b) => a.name.localeCompare(b.name));
                 render();
+                saveDataToLocalStorage();
             }
             newStaffNameInput.value = '';
         }
@@ -334,6 +369,7 @@
                 row.map(name => (name === nameToRemove ? '' : name))
             );
             render();
+            saveDataToLocalStorage();
         }
 
         function handleDragStart(e, name, type, data) {
@@ -349,51 +385,60 @@
             draggedItem = null;
         }
 
-        function handleDragOver(e) {
-            e.preventDefault();
-            const targetCell = e.target.closest('div[class*="border-b"]');
-            if (targetCell) {
-                targetCell.classList.add('drag-over');
-            }
-        }
-
-        function handleDragLeave(e) {
-             const targetCell = e.target.closest('div[class*="border-b"]');
-            if (targetCell) {
-                targetCell.classList.remove('drag-over');
-            }
-        }
+        function handleDragOver(e) { e.preventDefault(); e.target.closest('div[class*="border-b"]')?.classList.add('drag-over'); }
+        function handleDragLeave(e) { e.target.closest('div[class*="border-b"]')?.classList.remove('drag-over'); }
 
         function handleDrop(e, targetRowIndex, targetColIndex) {
             e.preventDefault();
-            const targetCell = e.target.closest('div[class*="border-b"]');
-            if (targetCell) {
-                targetCell.classList.remove('drag-over');
-            }
-
+            e.target.closest('div[class*="border-b"]')?.classList.remove('drag-over');
             if (!draggedItem) return;
-
             const newName = draggedItem.name === 'Remove' ? '' : draggedItem.name;
-
             if (draggedItem.type === 'cell') {
-                const origin = draggedItem.data;
-                rosterData.schedule[origin.rowIndex][origin.colIndex] = '';
+                rosterData.schedule[draggedItem.data.rowIndex][draggedItem.data.colIndex] = '';
             }
-            
             rosterData.schedule[targetRowIndex][targetColIndex] = newName;
             render();
+            saveDataToLocalStorage();
+        }
+        
+        // --- Modal Logic ---
+        function openShareModal() {
+            const viewerUrl = new URL('roster-viewer.html', window.location.href).href;
+            shareLinkInput.value = viewerUrl;
+            embedCodeTextarea.value = `<iframe src="${viewerUrl}" style="border:0; width:100%; height:800px;" allowfullscreen="" loading="lazy"></iframe>`;
+            
+            shareModal.classList.remove('opacity-0', 'pointer-events-none');
+            shareModal.querySelector('div[class*="transform"]').classList.remove('scale-95');
+        }
+
+        function closeShareModal() {
+            shareModal.classList.add('opacity-0', 'pointer-events-none');
+            shareModal.querySelector('div[class*="transform"]').classList.add('scale-95');
         }
 
         // --- Initial Load ---
-        document.addEventListener('DOMContentLoaded', () => {
-            datePicker.addEventListener('change', (e) => {
-                rosterData.startDate = e.target.value;
-                render();
-            });
-            addStaffForm.addEventListener('submit', handleAddStaff);
-            render();
-        });
+        loadDataFromLocalStorage();
+        render();
 
+        // --- Event Listeners ---
+        datePicker.addEventListener('change', (e) => {
+            rosterData.startDate = e.target.value;
+            render();
+            saveDataToLocalStorage();
+});
+        addStaffForm.addEventListener('submit', handleAddStaff);
+        shareButton.addEventListener('click', openShareModal);
+        closeModalButton.addEventListener('click', closeShareModal);
+        shareModal.addEventListener('click', (e) => {
+            if (e.target === shareModal) closeShareModal();
+        });
+        copyEmbedCodeButton.addEventListener('click', () => {
+            embedCodeTextarea.select();
+            document.execCommand('copy');
+            copyButtonText.textContent = 'Copied!';
+            setTimeout(() => { copyButtonText.textContent = 'Copy Code'; }, 2000);
+        });
+    });
     </script>
 </body>
 </html>
