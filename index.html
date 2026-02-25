@@ -3,442 +3,631 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weekly Staff Roster Editor</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Staff Roster</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Lucide Icons -->
     <script src="https://cdn.jsdelivr.net/npm/lucide-static@latest/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/drag-drop-touch@1.1.0/DragDropTouch.js"></script>
     <style>
-        /* Custom styles */
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .roster-container::-webkit-scrollbar { height: 8px; }
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; width: 100%; margin: 0; padding: 0; overflow-x: hidden; }
+        .roster-container::-webkit-scrollbar { height: 6px; width: 6px; }
         .roster-container::-webkit-scrollbar-track { background: #f1f5f9; }
-        .roster-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .roster-container::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .dragging { opacity: 0.5; transform: scale(0.95); }
-        .drag-over { outline: 2px dashed #3b82f6; outline-offset: -2px; background-color: #eff6ff; }
+        .roster-container::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dragging { opacity: 0.4; transform: scale(0.95); }
+        .drag-over { background-color: #f0f9ff; outline: 2px dashed #3b82f6; outline-offset: -2px; }
         [draggable="true"] { cursor: grab; }
         [draggable="true"]:active { cursor: grabbing; }
-        .modal-backdrop {
-            transition: opacity 0.3s ease;
-        }
+        #save-indicator { transition: opacity 0.3s ease; }
+        .loader { border-top-color: #3b82f6; animation: spinner 1.5s linear infinite; }
+        @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .mode-view .edit-only { display: none !important; }
+        .fluid-wrapper { width: 100% !important; max-width: 1200px !important; margin: 0 auto; }
+        .color-swatch { width: 12px; height: 12px; border-radius: 50%; cursor: pointer; transition: transform 0.1s; border: 1px solid rgba(0,0,0,0.1); }
+        .color-swatch:hover { transform: scale(1.4); }
+        .color-swatch.active { ring: 2px; ring-offset: 1px; ring-slate-400; }
+        .filter-select { background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23111827' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3e%3c/svg%3e"); background-position: right 0.5rem center; background-repeat: no-repeat; background-size: 1.5em 1.5em; padding-right: 2.5rem; -webkit-appearance: none; appearance: none; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4 sm:p-6 lg:p-8">
+<body class="bg-slate-50 min-h-screen <?= typeof mode !== 'undefined' && mode === 'view' ? 'mode-view' : '' ?>">
 
-    <div class="w-full max-w-screen-2xl mx-auto">
-        <div class="p-6 bg-white rounded-xl shadow-lg mb-8">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-white z-[100] flex flex-col items-center justify-center transition-opacity duration-500">
+        <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-100 h-10 w-10 mb-4"></div>
+        <p class="text-slate-400 text-sm font-medium animate-pulse uppercase tracking-widest">Syncing Roster...</p>
+    </div>
+
+    <div class="fluid-wrapper p-1 md:p-2 lg:p-4">
+        <!-- Header -->
+        <header class="bg-white rounded-xl shadow-sm border border-slate-200 p-3 mb-4">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-800">Weekly Roster Editor</h1>
-                    <p id="roster-date-range" class="text-gray-500 mt-1"></p>
+                    <div class="flex items-center gap-3">
+                        <span id="save-indicator" class="opacity-0 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-600 border border-blue-100">Updating...</span>
+                        <? if (typeof mode !== 'undefined' && mode === 'view') { ?>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-500 border border-slate-200">View Only</span>
+                        <? } ?>
+                    </div>
+                    <p id="roster-date-range" class="text-slate-800 text-sm font-bold uppercase tracking-widest mt-1"></p>
                 </div>
-                <div class="flex items-center gap-4">
-                    <button id="share-button" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-indigo-700 transition-colors flex items-center gap-2">
-                        <i data-lucide="share-2" class="w-5 h-5"></i>
-                        Share / Embed
+                
+                <div class="flex flex-wrap items-end gap-2 w-full md:w-auto">
+                    <button onclick="window.copyToNextWeek()" class="edit-only bg-indigo-50 text-indigo-600 border border-indigo-100 px-3 py-2 rounded-lg text-xs font-bold uppercase tracking-wider hover:bg-indigo-100 transition-colors flex items-center gap-2 h-[40px]">
+                        <i data-lucide="copy-plus" class="w-4 h-4"></i> Copy to Next Week
                     </button>
-                    <div class="flex-shrink-0">
-                        <label for="start-date-picker" class="block text-sm font-medium text-gray-700 mb-1">Start of Week</label>
-                        <input type="date" id="start-date-picker" class="p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    
+                    <!-- Improved Visibility Week Nav -->
+                    <div class="flex flex-col w-full md:w-auto">
+                        <label class="block text-[9px] font-bold text-slate-400 mb-0.5 uppercase tracking-widest">Change Week</label>
+                        <div class="flex items-center gap-1">
+                            <button onclick="window.moveWeek(-1)" class="h-[40px] w-[40px] flex items-center justify-center bg-white border-2 border-slate-200 rounded-lg text-slate-800 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95">
+                                <span class="text-lg font-bold">&lt;</span>
+                            </button>
+                            
+                            <div class="flex-grow md:flex-grow-0 relative h-[40px]">
+                                <input type="date" id="start-date-picker" class="h-full w-full md:w-auto pl-3 pr-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none cursor-pointer">
+                            </div>
+
+                            <button onclick="window.moveWeek(1)" class="h-[40px] w-[40px] flex items-center justify-center bg-white border-2 border-slate-200 rounded-lg text-slate-800 hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm active:scale-95">
+                                <span class="text-lg font-bold">&gt;</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- View-Only Filters -->
+            <? if (typeof mode !== 'undefined' && mode === 'view') { ?>
+            <div class="mt-3 pt-3 border-t border-slate-100 flex flex-wrap items-center gap-4">
+                <div class="flex items-center gap-2">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Find Staff:</label>
+                    <select id="filter-name" onchange="window.handleFilterChange()" class="filter-select text-sm font-bold text-slate-700 bg-white border-2 border-slate-200 rounded-lg px-3 py-2 outline-none focus:border-blue-400 min-w-[160px] shadow-sm">
+                        <option value="">Show All Staff</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Department:</label>
+                    <div class="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+                        <button onclick="window.setDeptFilter('all')" id="dept-all" class="dept-btn px-4 py-1.5 text-[10px] font-bold uppercase rounded-md bg-white shadow-sm text-slate-800 border border-slate-100">All</button>
+                        <button onclick="window.setDeptFilter('shop')" id="dept-shop" class="dept-btn px-4 py-1.5 text-[10px] font-bold uppercase rounded-md text-slate-500 hover:text-slate-700">Shop</button>
+                        <button onclick="window.setDeptFilter('yard')" id="dept-yard" class="dept-btn px-4 py-1.5 text-[10px] font-bold uppercase rounded-md text-slate-500 hover:text-slate-700">Yard</button>
+                    </div>
+                </div>
+            </div>
+            <? } ?>
+        </header>
+
+        <!-- Mobile Daily Navigation (Sticky & High Contrast) -->
+        <div id="mobile-nav" class="hidden sticky top-2 z-20 flex items-center justify-between bg-white/95 backdrop-blur-sm p-3 rounded-xl border-2 border-slate-200 mb-4 shadow-md">
+            <button onclick="window.changeDay(-1)" class="flex items-center gap-1.5 px-4 py-2.5 bg-white hover:bg-slate-50 rounded-lg text-slate-900 transition-colors border-2 border-slate-200 shadow-sm active:scale-95">
+                <i data-lucide="arrow-left" class="w-5 h-5 stroke-[3]"></i>
+                <span class="text-xs font-black uppercase tracking-wider">Prev</span>
+            </button>
+            <div class="text-center">
+                <p id="mobile-day-name" class="text-sm font-black text-slate-900 uppercase tracking-widest leading-none mb-0.5"></p>
+                <p id="mobile-day-date" class="text-[10px] font-bold text-slate-500"></p>
+            </div>
+            <button onclick="window.changeDay(1)" class="flex items-center gap-1.5 px-4 py-2.5 bg-white hover:bg-slate-50 rounded-lg text-slate-900 transition-colors border-2 border-slate-200 shadow-sm active:scale-95">
+                <span class="text-xs font-black uppercase tracking-wider">Next</span>
+                <i data-lucide="arrow-right" class="w-5 h-5 stroke-[3]"></i>
+            </button>
         </div>
 
-        <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Staff Palette -->
-            <aside class="lg:w-72 bg-white rounded-xl shadow-lg p-6 h-fit">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">Staff Management</h2>
-                <p class="text-sm text-gray-500 mb-4 -mt-2">Right-click a name to remove.</p>
-                <form id="add-staff-form" class="flex gap-2 mb-4">
-                    <input type="text" id="new-staff-name" placeholder="Add new staff..." class="flex-grow p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" required>
-                    <input type="color" id="new-staff-color" value="#a3a3a3" class="p-1 h-10 w-10 border border-gray-300 rounded-md cursor-pointer">
-                    <button type="submit" class="bg-blue-600 text-white p-2 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center">
-                        <i data-lucide="plus" class="w-5 h-5"></i>
+        <div class="flex flex-col lg:flex-row gap-4">
+            <!-- Staff Palette (Editor Only) -->
+            <aside class="lg:w-60 bg-white rounded-xl shadow-sm border border-slate-200 p-3 h-fit sticky top-2 edit-only">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-[10px] font-bold text-slate-800 uppercase tracking-widest">Staff Management</h2>
+                    <span id="staff-count" class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">0</span>
+                </div>
+                
+                <form id="add-staff-form" class="flex flex-col gap-2 mb-4">
+                    <input type="text" id="new-staff-name" placeholder="Staff Name" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-blue-400 transition-all font-medium" required>
+                    <button type="submit" class="w-full bg-slate-800 text-white py-2 rounded-lg hover:bg-slate-900 transition-colors shadow-sm text-xs font-bold flex items-center justify-center gap-2">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i> ADD STAFF
                     </button>
                 </form>
-                <div id="staff-palette" class="space-y-3">
-                    <!-- Draggable staff names will be generated here -->
+
+                <div id="staff-palette" class="space-y-1.5 max-h-[40vh] overflow-y-auto pr-1"></div>
+
+                <div class="mt-6 pt-4 border-t border-slate-100">
+                    <h3 class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-3">Regular Patterns</h3>
+                    <div class="grid grid-cols-1 gap-2">
+                        <button onclick="window.saveAsPattern()" class="w-full bg-teal-50 text-teal-700 py-2 rounded-lg border border-teal-100 text-[10px] font-bold uppercase hover:bg-teal-100 transition-all">Save Current Week</button>
+                        <button onclick="window.loadPattern()" class="w-full bg-orange-50 text-orange-700 py-2 rounded-lg border border-orange-100 text-[10px] font-bold uppercase hover:bg-orange-100 transition-all">Load Saved Pattern</button>
+                    </div>
                 </div>
             </aside>
 
-            <!-- Roster -->
-            <main class="flex-1">
-                <div class="w-full bg-white rounded-xl shadow-lg overflow-hidden">
-                    <div id="roster-container" class="roster-container overflow-x-auto">
-                        <!-- Roster will be generated here -->
+            <!-- Main Roster Content -->
+            <main class="flex-1 space-y-4">
+                <!-- Shop Section -->
+                <section id="section-shop" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-teal-600 px-4 py-2.5 flex justify-between items-center">
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2 uppercase tracking-widest">
+                            <i data-lucide="shopping-bag" class="w-4 h-4"></i> Shop
+                        </h2>
+                        <button onclick="window.addRow('shop')" class="edit-only text-[10px] font-bold bg-white text-teal-700 px-3 py-1.5 rounded-md hover:bg-teal-50 transition-all flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="plus" class="w-3 h-3"></i> ADD ROW
+                        </button>
                     </div>
-                </div>
+                    <div id="roster-container-shop" class="roster-container overflow-x-auto overflow-y-auto max-h-[70vh]"></div>
+                </section>
+
+                <!-- Front Yard Section -->
+                <section id="section-yard" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-orange-600 px-4 py-2.5 flex justify-between items-center">
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2 uppercase tracking-widest">
+                            <i data-lucide="sun" class="w-4 h-4"></i> Front Yard
+                        </h2>
+                        <button onclick="window.addRow('yard')" class="edit-only text-[10px] font-bold bg-white text-orange-700 px-3 py-1.5 rounded-md hover:bg-orange-50 transition-all flex items-center gap-1.5 shadow-sm">
+                            <i data-lucide="plus" class="w-3 h-3"></i> ADD ROW
+                        </button>
+                    </div>
+                    <div id="roster-container-yard" class="roster-container overflow-x-auto overflow-y-auto max-h-[70vh]"></div>
+                </section>
+
                 <!-- Notes Section -->
-                <div class="w-full bg-white rounded-xl shadow-lg overflow-hidden mt-8">
-                     <h2 class="text-xl font-bold text-gray-800 p-6 border-b">Daily Notes</h2>
-                    <div id="notes-container" class="grid grid-cols-1 md:grid-cols-7">
-                        <!-- Notes textareas will be generated here -->
+                <section id="section-notes" class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="px-4 py-2.5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                        <h2 class="text-xs font-bold text-slate-500 flex items-center gap-2 uppercase tracking-widest">
+                            <i data-lucide="message-square" class="w-4 h-4 text-slate-400"></i> Daily Notes
+                        </h2>
+                        <button onclick="window.clearDailyNotes()" class="text-[10px] font-bold text-red-500 hover:text-red-700 uppercase tracking-wider flex items-center gap-1">
+                            <i data-lucide="eraser" class="w-3 h-3"></i> Clear All Notes
+                        </button>
                     </div>
-                </div>
+                    <div id="notes-container" class="grid grid-cols-1 md:grid-cols-7 divide-y md:divide-y-0 md:divide-x divide-slate-100"></div>
+                </section>
             </main>
         </div>
     </div>
-    
-    <!-- Share Modal -->
-    <div id="share-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center p-4 z-50 modal-backdrop opacity-0 pointer-events-none">
-        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl transform scale-95 transition-transform duration-300">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-gray-800">Share or Embed Your Roster</h2>
-                <button id="close-modal-button" class="text-gray-500 hover:text-gray-800">
-                    <i data-lucide="x" class="w-6 h-6"></i>
-                </button>
-            </div>
-            <p class="text-gray-600 mb-4">Use the link for sharing, or copy the HTML code to embed this roster on a website like Google Sites.</p>
-            
-            <div class="mb-6">
-                <label for="share-link" class="block text-sm font-medium text-gray-700 mb-1">Shareable Link (View-Only)</label>
-                <input id="share-link" type="text" readonly class="w-full p-2 border border-gray-300 rounded-md bg-gray-50">
-            </div>
-
-            <div>
-                <label for="embed-code" class="block text-sm font-medium text-gray-700 mb-1">Embed Code</label>
-                <textarea id="embed-code" readonly class="w-full p-2 border border-gray-300 rounded-md bg-gray-50 h-32 resize-none"></textarea>
-            </div>
-            <div class="mt-4 text-right">
-                <button id="copy-embed-code" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center gap-2 ml-auto">
-                    <i data-lucide="copy" class="w-5 h-5"></i>
-                    <span id="copy-button-text">Copy Code</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // --- Data Model ---
-        let staffMembers = [];
-        let rosterData = {};
+    const IS_GAS = typeof google !== 'undefined' && google.script && google.script.run;
+    const APP_MODE = '<?= typeof mode !== "undefined" ? mode : "edit" ?>'; 
+    
+    // Curated 6-colour Modern Palette
+    const MODERN_PALETTE = [
+        '#4285F4', // Blue
+        '#DB4437', // Red
+        '#F4B400', // Amber
+        '#0F9D58', // Green
+        '#AB47BC', // Purple
+        '#00ACC1'  // Teal
+    ];
 
-        // --- State for Drag & Drop ---
-        let draggedItem = null;
+    let staffMembers = [];
+    let rosterData = { weeks: {}, patterns: null };
+    let currentMonday = '';
+    let draggedItem = null;
+    let selectedDayIndex = 0;
+    let filterName = '';
+    let filterDept = 'all';
 
-        // --- DOM Elements ---
-        const staffPalette = document.getElementById('staff-palette');
-        const rosterContainer = document.getElementById('roster-container');
-        const notesContainer = document.getElementById('notes-container');
-        const rosterDateRangeEl = document.getElementById('roster-date-range');
-        const datePicker = document.getElementById('start-date-picker');
-        const addStaffForm = document.getElementById('add-staff-form');
-        const newStaffNameInput = document.getElementById('new-staff-name');
-        const newStaffColorInput = document.getElementById('new-staff-color');
-        // Modal elements
-        const shareButton = document.getElementById('share-button');
-        const shareModal = document.getElementById('share-modal');
-        const closeModalButton = document.getElementById('close-modal-button');
-        const shareLinkInput = document.getElementById('share-link');
-        const embedCodeTextarea = document.getElementById('embed-code');
-        const copyEmbedCodeButton = document.getElementById('copy-embed-code');
-        const copyButtonText = document.getElementById('copy-button-text');
+    const shopRoster = document.getElementById('roster-container-shop');
+    const yardRoster = document.getElementById('roster-container-yard');
+    const notesContainer = document.getElementById('notes-container');
+    const rosterDateRangeEl = document.getElementById('roster-date-range');
+    const datePicker = document.getElementById('start-date-picker');
+    const saveIndicator = document.getElementById('save-indicator');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const mobileNav = document.getElementById('mobile-nav');
 
+    window.onload = () => {
+        const today = new Date();
+        const tDay = today.getDay();
+        selectedDayIndex = (tDay === 0) ? 6 : tDay - 1;
 
-        // --- Data Persistence ---
-        function saveDataToLocalStorage() {
-            const appData = { staffMembers, rosterData };
-            localStorage.setItem('rosterAppData', JSON.stringify(appData));
+        if (IS_GAS) {
+            google.script.run
+                .withSuccessHandler((data) => {
+                    staffMembers = data.staffMembers || [];
+                    rosterData = data.rosterData || { weeks: {} };
+                    currentMonday = getMondayString(new Date());
+                    ensureWeekExists(currentMonday);
+                    populateFilterDropdown();
+                    applyDatePickerConstraints();
+                    render();
+                    hideLoader();
+                })
+                .withFailureHandler(err => { console.error(err); hideLoader(); })
+                .getRosterData();
+        } else {
+            staffMembers = [{name: "Abbey L"}, {name: "Jodie"}, {name: "Zack"}];
+            currentMonday = getMondayString(new Date());
+            ensureWeekExists(currentMonday);
+            populateFilterDropdown();
+            render();
+            hideLoader();
         }
+    };
 
-        function loadDataFromLocalStorage() {
-            const savedData = localStorage.getItem('rosterAppData');
-            if (savedData) {
-                const appData = JSON.parse(savedData);
-                staffMembers = appData.staffMembers || [];
-                rosterData = appData.rosterData || createDefaultRosterData();
+    function applyDatePickerConstraints() {
+        if (APP_MODE === 'view') {
+            const now = new Date();
+            const thisMonStr = getMondayString(now);
+            const nextMon = new Date(new Date(thisMonStr + 'T00:00:00').getTime() + 7 * 86400000);
+            
+            datePicker.min = thisMonStr;
+            datePicker.max = formatDateLocal(new Date(nextMon.getTime() + 6 * 86400000));
+        }
+    }
+
+    function populateFilterDropdown() {
+        const select = document.getElementById('filter-name');
+        if (!select) return;
+        select.innerHTML = '<option value="">Show All Staff</option>';
+        staffMembers.sort((a,b) => a.name.localeCompare(b.name)).forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.name; opt.textContent = s.name;
+            select.appendChild(opt);
+        });
+    }
+
+    window.handleFilterChange = () => { filterName = document.getElementById('filter-name').value; render(); };
+
+    window.setDeptFilter = (dept) => {
+        filterDept = dept;
+        document.querySelectorAll('.dept-btn').forEach(btn => {
+            btn.classList.remove('bg-white', 'shadow-sm', 'text-slate-800', 'border', 'border-slate-100');
+            btn.classList.add('text-slate-500');
+        });
+        const activeBtn = document.getElementById(`dept-${dept}`);
+        activeBtn.classList.add('bg-white', 'shadow-sm', 'text-slate-800', 'border', 'border-slate-100');
+        activeBtn.classList.remove('text-slate-500');
+        render();
+    };
+
+    function ensureWeekExists(mondayString) {
+        if (!rosterData.weeks[mondayString]) {
+            const weekKeys = Object.keys(rosterData.weeks).filter(k => k !== 'patterns');
+            let templateSections = { shop: [], yard: [] };
+            if (weekKeys.length > 0) {
+                const lastWeekKey = weekKeys.sort().pop();
+                const lastWeek = rosterData.weeks[lastWeekKey];
+                Object.keys(lastWeek.sections).forEach(sec => {
+                    templateSections[sec] = lastWeek.sections[sec].map(() => ({
+                        shifts: Array.from({length: 7}, () => ({ name: '', note: '', color: MODERN_PALETTE[0] }))
+                    }));
+                });
             } else {
-                // If no saved data, load defaults
-                staffMembers = [
-                    { name: 'Chrissy', color: '#60a5fa' }, { name: 'Gemma', color: '#f87171' },
-                    { name: 'Jodie', color: '#4ade80' }, { name: 'Niamh', color: '#fbbf24' },
-                    { name: 'Julie', color: '#a78bfa' }, { name: 'MacKenzie', color: '#34d399' },
-                    { name: 'India', color: '#f472b6' }, { name: 'Zack', color: '#fb923c' },
-                    { name: 'Charlie', color: '#2dd4bf' }, { name: 'Else', color: '#a3a3a3' },
-                    { name: 'Simon', color: '#93c5fd' }, { name: 'Alex', color: '#c084fc' }
-                ];
-                rosterData = createDefaultRosterData();
+                templateSections = {
+                    shop: [{ shifts: Array.from({length: 7}, () => ({ name: '', note: '', color: MODERN_PALETTE[0] })) }],
+                    yard: [{ shifts: Array.from({length: 7}, () => ({ name: '', note: '', color: MODERN_PALETTE[2] })) }]
+                };
             }
+            rosterData.weeks[mondayString] = { sections: templateSections, notes: ['', '', '', '', '', '', ''] };
+        }
+    }
+
+    function hideLoader() {
+        loadingOverlay.style.opacity = '0';
+        setTimeout(() => loadingOverlay.style.display = 'none', 500);
+    }
+
+    function triggerSave() {
+        if (!IS_GAS) return;
+        showSaveStatus('Syncing...');
+        google.script.run
+            .withSuccessHandler(() => showSaveStatus('Saved'))
+            .withFailureHandler(() => showSaveStatus('Sync Error', true))
+            .saveRosterData({ staffMembers, rosterData });
+    }
+
+    function showSaveStatus(text, isError = false) {
+        saveIndicator.textContent = text;
+        saveIndicator.className = `px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${isError ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`;
+        saveIndicator.style.opacity = '1';
+        setTimeout(() => { if(saveIndicator.textContent === text) saveIndicator.style.opacity = '0'; }, 3000);
+    }
+
+    function formatDateLocal(d) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+
+    function getMondayString(dateObj) {
+        const d = new Date(dateObj);
+        const day = d.getDay();
+        d.setDate(d.getDate() - day + (day === 0 ? -6 : 1));
+        return formatDateLocal(d);
+    }
+
+    function render() {
+        const week = rosterData.weeks[currentMonday];
+        const start = new Date(currentMonday + 'T00:00:00');
+        const df = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        rosterDateRangeEl.textContent = `${df.format(start)} — ${df.format(new Date(start.getTime() + 6*86400000))}`;
+        
+        const isLandscape = window.matchMedia("(orientation: landscape)").matches;
+        const isMobileView = window.innerWidth < 768 && !isLandscape && APP_MODE === 'view';
+        
+        datePicker.value = isMobileView ? formatDateLocal(new Date(start.getTime() + selectedDayIndex*86400000)) : currentMonday;
+
+        mobileNav.classList.toggle('hidden', !isMobileView);
+        if (isMobileView) {
+            const d = new Date(start.getTime() + selectedDayIndex*86400000);
+            document.getElementById('mobile-day-name').textContent = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(d);
+            document.getElementById('mobile-day-date').textContent = new Intl.DateTimeFormat('en-US', { day: 'numeric', month: 'short' }).format(d);
         }
 
-        function createDefaultRosterData() {
-            const createEmptySchedule = () => Array.from({ length: 20 }, () => Array(7).fill(''));
-            return {
-                startDate: '2025-04-21',
-                schedule: createEmptySchedule(),
-                notes: Array(7).fill('')
+        document.getElementById('section-shop').style.display = (filterDept === 'all' || filterDept === 'shop') ? 'block' : 'none';
+        document.getElementById('section-yard').style.display = (filterDept === 'all' || filterDept === 'yard') ? 'block' : 'none';
+
+        renderStaffPalette();
+        renderSection('shop', shopRoster, start, isMobileView);
+        renderSection('yard', yardRoster, start, isMobileView);
+        renderNotes(start, isMobileView);
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+    }
+
+    function renderStaffPalette() {
+        const pal = document.getElementById('staff-palette');
+        if (!pal) return;
+        pal.innerHTML = '';
+        staffMembers.sort((a,b) => a.name.localeCompare(b.name)).forEach(s => pal.appendChild(createDraggable(s.name)));
+        pal.appendChild(createDraggable('Remove'));
+        document.getElementById('staff-count').textContent = staffMembers.length;
+    }
+
+    function renderSection(id, container, start, isMobile) {
+        container.innerHTML = '';
+        const week = rosterData.weeks[currentMonday];
+        const rows = week.sections[id] || [];
+
+        if (isMobile) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'p-3 space-y-3';
+            let hasMatch = false;
+            rows.forEach((row, ri) => {
+                const cellData = row.shifts[selectedDayIndex];
+                if (cellData && cellData.name) {
+                    if (filterName && cellData.name !== filterName) return;
+                    hasMatch = true;
+                    const card = document.createElement('div');
+                    card.className = 'flex items-center gap-4 p-3.5 rounded-xl border border-slate-100 bg-white shadow-sm';
+                    const color = cellData.color || MODERN_PALETTE[0];
+                    card.innerHTML = `<div class="w-2.5 h-10 rounded-full flex-shrink-0" style="background-color:${color}"></div>
+                        <div class="flex-grow overflow-hidden"><p class="text-sm font-bold text-slate-800 truncate">${cellData.name}</p></div>`;
+                    const noteInput = document.createElement('input');
+                    noteInput.className = 'w-36 flex-shrink-0 text-xs font-medium text-slate-500 bg-slate-50 border-none rounded px-2 outline-none text-right h-8 focus:bg-white focus:ring-1 focus:ring-blue-100';
+                    noteInput.placeholder = APP_MODE === 'view' ? '' : 'Add note...';
+                    noteInput.value = cellData.note || '';
+                    noteInput.onchange = () => { row.shifts[selectedDayIndex].note = noteInput.value; triggerSave(); };
+                    card.appendChild(noteInput);
+                    wrapper.appendChild(card);
+                }
+            });
+            if (!hasMatch) wrapper.innerHTML = `<p class="text-center text-xs text-slate-400 py-6 italic">${filterName ? 'No matching shifts found' : 'No staff rostered today'}</p>`;
+            container.appendChild(wrapper);
+        } else {
+            const grid = document.createElement('div');
+            grid.className = `grid min-w-[900px] ${APP_MODE === 'edit' ? 'grid-cols-8' : 'grid-cols-7'}`; 
+            for (let i = 0; i < 7; i++) {
+                const d = new Date(start.getTime() + i*86400000);
+                const h = document.createElement('div');
+                h.className = 'sticky top-0 z-10 text-center font-bold text-slate-500 p-2.5 border-b border-r border-slate-100 text-[10px] bg-slate-50 uppercase tracking-widest';
+                h.textContent = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: '2-digit' }).format(d);
+                grid.appendChild(h);
+            }
+            if (APP_MODE === 'edit') grid.appendChild(createActionSpacer());
+            rows.forEach((row, ri) => {
+                row.shifts.forEach((cellData, ci) => grid.appendChild(createCell(id, ri, ci, cellData)));
+                if (APP_MODE === 'edit') grid.appendChild(createRowControls(id, ri));
+            });
+            container.appendChild(grid);
+        }
+    }
+
+    function createActionSpacer() {
+        const s = document.createElement('div'); s.className = 'border-b border-slate-100 bg-slate-50'; return s;
+    }
+
+    function createRowControls(id, ri) {
+        const wrap = document.createElement('div');
+        wrap.className = 'flex items-center justify-center border-b border-slate-100 bg-white p-2';
+        const btn = document.createElement('button');
+        btn.onclick = () => removeRow(id, ri);
+        btn.className = 'text-slate-300 hover:text-red-500 transition-colors flex items-center gap-1.5 p-2 rounded-lg hover:bg-red-50';
+        btn.innerHTML = `<i data-lucide="trash-2" class="w-4 h-4"></i> <span class="text-[8px] font-bold uppercase tracking-wider">Del Row</span>`;
+        wrap.appendChild(btn);
+        return wrap;
+    }
+
+    function createCell(sectionId, ri, ci, cellData) {
+        const cell = document.createElement('div');
+        cell.className = 'min-h-[85px] flex flex-col items-center justify-start p-1.5 border-b border-r border-slate-100 bg-white transition-colors overflow-hidden relative';
+        if (APP_MODE === 'edit') {
+            cell.ondragover = (e) => { e.preventDefault(); cell.classList.add('drag-over'); };
+            cell.ondragleave = () => cell.classList.remove('drag-over');
+            cell.ondrop = (e) => {
+                e.preventDefault(); cell.classList.remove('drag-over');
+                if (!draggedItem) return;
+                const newName = draggedItem.name === 'Remove' ? '' : draggedItem.name;
+                rosterData.weeks[currentMonday].sections[sectionId][ri].shifts[ci] = { 
+                    name: newName, 
+                    note: '', 
+                    color: MODERN_PALETTE[0] 
+                };
+                render(); triggerSave();
             };
         }
-
-        // --- Helper Functions ---
-        function getContrastingTextColor(hexcolor) {
-            if (!hexcolor) return '#000000';
-            hexcolor = hexcolor.replace("#", "");
-            const r = parseInt(hexcolor.substr(0, 2), 16);
-            const g = parseInt(hexcolor.substr(2, 2), 16);
-            const b = parseInt(hexcolor.substr(4, 2), 16);
-            const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-            return (yiq >= 128) ? '#1f2937' : '#ffffff';
+        if (cellData.name) {
+            if (filterName && cellData.name !== filterName) { cell.classList.add('opacity-10'); return cell; }
+            const badgeColor = cellData.color || MODERN_PALETTE[0];
+            const badge = document.createElement('div');
+            badge.className = 'w-full flex items-center justify-center rounded-lg text-sm font-bold shadow-sm px-1.5 text-center h-8 mb-1.5 transition-colors cursor-default';
+            badge.style.backgroundColor = badgeColor; badge.style.color = getContrast(badgeColor);
+            badge.textContent = cellData.name;
+            if (APP_MODE === 'edit') {
+                badge.draggable = true;
+                badge.ondragstart = (e) => { draggedItem = { name: cellData.name }; e.dataTransfer.setData('text', cellData.name); };
+                const palWrap = document.createElement('div');
+                palWrap.className = 'flex items-center justify-center gap-1.5 mt-1';
+                MODERN_PALETTE.forEach(c => {
+                    const sw = document.createElement('div');
+                    sw.className = `color-swatch ${c === badgeColor ? 'ring-2 ring-slate-400 scale-110' : ''}`;
+                    sw.style.backgroundColor = c;
+                    sw.onclick = () => { rosterData.weeks[currentMonday].sections[sectionId][ri].shifts[ci].color = c; render(); triggerSave(); };
+                    palWrap.appendChild(sw);
+                });
+                cell.appendChild(badge); cell.appendChild(palWrap);
+            } else { cell.appendChild(badge); }
+            const noteInput = document.createElement('input');
+            noteInput.className = 'w-full text-[10px] font-medium text-slate-500 bg-slate-50/50 border-none rounded px-1 outline-none text-center h-5 mt-1 focus:bg-white focus:ring-1 focus:ring-blue-100';
+            noteInput.placeholder = APP_MODE === 'view' ? '' : 'Note...';
+            noteInput.value = cellData.note || '';
+            noteInput.onchange = () => { rosterData.weeks[currentMonday].sections[sectionId][ri].shifts[ci].note = noteInput.value; triggerSave(); };
+            cell.appendChild(noteInput);
         }
-        
-        // --- Main Render Function ---
-        function render() {
-            renderDateDisplay();
-            renderStaffPalette();
-            renderRosterGrid();
-            renderNotes();
-            lucide.createIcons();
-        }
+        return cell;
+    }
 
-        function renderDateDisplay() {
-            const startDate = new Date(rosterData.startDate + 'T00:00:00');
-            const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 6);
-            const dateFormatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            rosterDateRangeEl.textContent = `${dateFormatter.format(startDate)} - ${dateFormatter.format(endDate)}`;
-            datePicker.value = rosterData.startDate;
+    function createDraggable(name) {
+        const el = document.createElement('div');
+        if (APP_MODE === 'edit') el.draggable = true;
+        el.ondragstart = (e) => { draggedItem = { name }; e.dataTransfer.setData('text', name); el.classList.add('dragging'); };
+        el.ondragend = () => el.classList.remove('dragging');
+        el.className = `p-2.5 rounded-xl font-bold transition-all flex justify-between items-center text-sm border border-slate-100 shadow-sm ${name === 'Remove' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-slate-700 hover:border-slate-300 cursor-grab active:cursor-grabbing'}`;
+        if (name === 'Remove') {
+            el.textContent = 'Clear Shift Cell';
+        } else {
+            el.innerHTML = `<span class="truncate">${name}</span>`;
+            if (APP_MODE === 'edit') el.oncontextmenu = (e) => { e.preventDefault(); handleRemove(name); };
         }
+        return el;
+    }
 
-        function renderStaffPalette() {
-            staffPalette.innerHTML = ''; 
-            staffMembers.forEach(staff => {
-                const staffEl = createDraggableName(staff.name, 'palette');
-                staffPalette.appendChild(staffEl);
-            });
-            const removeEl = createDraggableName('Remove', 'palette');
-            staffPalette.appendChild(removeEl);
-        }
+    function renderNotes(start, isMobile) {
+        notesContainer.innerHTML = '';
+        const week = rosterData.weeks[currentMonday];
+        const indices = isMobile ? [selectedDayIndex] : [0,1,2,3,4,5,6];
+        indices.forEach(i => {
+            const wrap = document.createElement('div'); wrap.className = 'p-4 bg-white';
+            const d = new Date(start.getTime() + i*86400000);
+            wrap.innerHTML = `<p class="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-widest">${new Intl.DateTimeFormat('en-US', {weekday:'short'}).format(d)}</p>`;
+            const tx = document.createElement('textarea');
+            tx.className = 'w-full h-28 p-3 text-sm font-medium border border-slate-100 rounded-xl resize-none outline-none bg-slate-50 focus:bg-white focus:border-blue-300 transition-all leading-relaxed';
+            tx.value = week.notes[i] || '';
+            tx.onchange = () => { week.notes[i] = tx.value; triggerSave(); };
+            wrap.appendChild(tx);
+            notesContainer.appendChild(wrap);
+        });
+    }
 
-        function renderRosterGrid() {
-            rosterContainer.innerHTML = '';
-            const grid = document.createElement('div');
-            grid.className = 'grid grid-cols-7 min-w-[1200px]';
-            
-            const headerRow = createHeader();
-            grid.appendChild(headerRow);
-            
-            rosterData.schedule.forEach((row, rowIndex) => {
-                row.forEach((name, colIndex) => {
-                    const cell = createDroppableCell(rowIndex, colIndex);
-                    grid.appendChild(cell);
+    function getContrast(hex) {
+        const rgb = hex.match(/\w\w/g).map(x => parseInt(x, 16));
+        return (rgb[0]*299 + rgb[1]*587 + rgb[2]*114)/1000 > 160 ? '#111827' : '#ffffff';
+    }
+
+    function handleRemove(n) {
+        if (!confirm(`Permanently delete ${n} from staff list?`)) return;
+        staffMembers = staffMembers.filter(s => s.name !== n);
+        Object.keys(rosterData.weeks).forEach(wk => {
+            ['shop','yard'].forEach(sec => {
+                rosterData.weeks[wk].sections[sec].forEach(row => {
+                    row.shifts = row.shifts.map(s => s.name === n ? {name:'',note:'',color:MODERN_PALETTE[0]} : s);
                 });
             });
-            rosterContainer.appendChild(grid);
-        }
+        });
+        populateFilterDropdown(); render(); triggerSave();
+    }
 
-        function renderNotes() {
-            notesContainer.innerHTML = '';
-            for(let i = 0; i < 7; i++) {
-                const noteWrapper = document.createElement('div');
-                noteWrapper.className = 'p-4 border-b md:border-b-0 md:border-r border-gray-200';
-
-                const textArea = document.createElement('textarea');
-                textArea.className = 'w-full h-24 p-2 border border-gray-200 rounded-md resize-none focus:ring-blue-500 focus:border-blue-500';
-                textArea.placeholder = `Notes for day ${i + 1}...`;
-                textArea.value = rosterData.notes[i] || '';
-                textArea.addEventListener('input', (e) => {
-                    rosterData.notes[i] = e.target.value;
-                    saveDataToLocalStorage();
-                });
-                
-                noteWrapper.appendChild(textArea);
-                notesContainer.appendChild(noteWrapper);
-            }
-        }
-
-        // --- Element Creation Helpers ---
-        function createHeader() {
-            const headerRow = document.createElement('div');
-            headerRow.className = 'col-span-7 grid grid-cols-7 sticky top-0 bg-white z-10';
-            const startDate = new Date(rosterData.startDate + 'T00:00:00');
-            const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'short', day: '2-digit', month: 'short' });
-            for (let i = 0; i < 7; i++) {
-                const currentDate = new Date(startDate);
-                currentDate.setDate(startDate.getDate() + i);
-                const parts = dayFormatter.formatToParts(currentDate);
-                const weekday = parts.find(p => p.type === 'weekday').value;
-                const day = parts.find(p => p.type === 'day').value;
-                const month = parts.find(p => p.type === 'month').value;
-                const dayCell = document.createElement('div');
-                dayCell.className = 'text-center font-semibold text-gray-700 p-3 border-b-2 border-r border-gray-200';
-                dayCell.textContent = `${weekday} ${day} ${month}`;
-                headerRow.appendChild(dayCell);
-            }
-            return headerRow;
-        }
-
-        function createDraggableName(name, type, data = {}) {
-            const el = document.createElement('div');
-            el.draggable = true;
-            el.addEventListener('dragstart', (e) => handleDragStart(e, name, type, data));
-            el.addEventListener('dragend', handleDragEnd);
-
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = name;
-
-            const staffMember = staffMembers.find(s => s.name === name);
-
-            if (type === 'cell' && staffMember) {
-                el.className = 'w-full h-full flex items-center justify-center rounded-md text-sm font-medium transition-all';
-                el.style.backgroundColor = staffMember.color;
-                el.style.color = getContrastingTextColor(staffMember.color);
-                el.appendChild(nameSpan);
-            } else if (type === 'palette') {
-                el.className = 'p-2 rounded-md font-medium text-center transition-all flex justify-between items-center group';
-                if (name === 'Remove') {
-                    el.classList.add('bg-red-200', 'text-red-800');
-                    el.appendChild(nameSpan);
-                } else if (staffMember) {
-                    el.classList.add('bg-gray-200', 'text-gray-800');
-                    el.appendChild(nameSpan);
-
-                    el.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        handleRemoveStaff(name);
-                    });
-
-                    const controlsWrapper = document.createElement('div');
-                    controlsWrapper.className = 'flex items-center gap-2';
-                    const colorPickerLabel = document.createElement('label');
-                    colorPickerLabel.className = 'relative w-6 h-6 rounded-full border-2 border-white shadow-sm cursor-pointer';
-                    colorPickerLabel.style.backgroundColor = staffMember.color;
-                    const colorInput = document.createElement('input');
-                    colorInput.type = 'color';
-                    colorInput.value = staffMember.color;
-                    colorInput.className = 'absolute inset-0 w-full h-full opacity-0 cursor-pointer';
-                    colorInput.addEventListener('input', (e) => {
-                        colorPickerLabel.style.backgroundColor = e.target.value;
-                    });
-                    colorInput.addEventListener('change', (e) => {
-                        staffMember.color = e.target.value;
-                        render();
-                        saveDataToLocalStorage();
-                    });
-                    colorPickerLabel.appendChild(colorInput);
-                    controlsWrapper.appendChild(colorPickerLabel);
-                    el.appendChild(controlsWrapper);
-                }
-            }
-            return el;
-        }
+    window.moveWeek = (dir) => {
+        const current = new Date(currentMonday + 'T00:00:00');
+        current.setDate(current.getDate() + (dir * 7));
+        const newMonStr = formatDateLocal(current);
         
-        function createDroppableCell(rowIndex, colIndex) {
-            const cell = document.createElement('div');
-            const name = rosterData.schedule[rowIndex][colIndex];
-            cell.className = `h-16 flex items-center justify-center p-1 border-b border-r border-gray-200 transition-colors`;
-            
-            cell.addEventListener('dragover', handleDragOver);
-            cell.addEventListener('dragleave', handleDragLeave);
-            cell.addEventListener('drop', (e) => handleDrop(e, rowIndex, colIndex));
-
-            if (name) {
-                const data = { rowIndex, colIndex };
-                const nameEl = createDraggableName(name, 'cell', data);
-                cell.appendChild(nameEl);
-            }
-            return cell;
+        if (APP_MODE === 'view') {
+            const now = new Date();
+            const thisMonStr = getMondayString(now);
+            const nextWeekMon = new Date(new Date(thisMonStr + 'T00:00:00').getTime() + 7*86400000);
+            const nextWeekMonStr = formatDateLocal(nextWeekMon);
+            if (newMonStr !== thisMonStr && newMonStr !== nextWeekMonStr) return;
         }
 
-        // --- Event Handlers ---
-        function handleAddStaff(e) {
-            e.preventDefault();
-            const newName = newStaffNameInput.value.trim();
-            const newColor = newStaffColorInput.value;
-            if (newName && !staffMembers.some(staff => staff.name === newName)) {
-                staffMembers.push({ name: newName, color: newColor });
-                staffMembers.sort((a, b) => a.name.localeCompare(b.name));
-                render();
-                saveDataToLocalStorage();
-            }
-            newStaffNameInput.value = '';
-        }
-
-        function handleRemoveStaff(nameToRemove) {
-            staffMembers = staffMembers.filter(staff => staff.name !== nameToRemove);
-            rosterData.schedule = rosterData.schedule.map(row => 
-                row.map(name => (name === nameToRemove ? '' : name))
-            );
-            render();
-            saveDataToLocalStorage();
-        }
-
-        function handleDragStart(e, name, type, data) {
-            draggedItem = { name, type, data };
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/plain', name);
-            setTimeout(() => e.target.closest('[draggable="true"]').classList.add('dragging'), 0);
-        }
-
-        function handleDragEnd(e) {
-            const draggable = e.target.closest('[draggable="true"]');
-            if(draggable) draggable.classList.remove('dragging');
-            draggedItem = null;
-        }
-
-        function handleDragOver(e) { e.preventDefault(); e.target.closest('div[class*="border-b"]')?.classList.add('drag-over'); }
-        function handleDragLeave(e) { e.target.closest('div[class*="border-b"]')?.classList.remove('drag-over'); }
-
-        function handleDrop(e, targetRowIndex, targetColIndex) {
-            e.preventDefault();
-            e.target.closest('div[class*="border-b"]')?.classList.remove('drag-over');
-            if (!draggedItem) return;
-            const newName = draggedItem.name === 'Remove' ? '' : draggedItem.name;
-            if (draggedItem.type === 'cell') {
-                rosterData.schedule[draggedItem.data.rowIndex][draggedItem.data.colIndex] = '';
-            }
-            rosterData.schedule[targetRowIndex][targetColIndex] = newName;
-            render();
-            saveDataToLocalStorage();
-        }
-        
-        // --- Modal Logic ---
-        function openShareModal() {
-            const viewerUrl = new URL('roster-viewer.html', window.location.href).href;
-            shareLinkInput.value = viewerUrl;
-            embedCodeTextarea.value = `<iframe src="${viewerUrl}" style="border:0; width:100%; height:800px;" allowfullscreen="" loading="lazy"></iframe>`;
-            
-            shareModal.classList.remove('opacity-0', 'pointer-events-none');
-            shareModal.querySelector('div[class*="transform"]').classList.remove('scale-95');
-        }
-
-        function closeShareModal() {
-            shareModal.classList.add('opacity-0', 'pointer-events-none');
-            shareModal.querySelector('div[class*="transform"]').classList.add('scale-95');
-        }
-
-        // --- Initial Load ---
-        loadDataFromLocalStorage();
+        currentMonday = newMonStr;
+        ensureWeekExists(currentMonday);
         render();
+    };
 
-        // --- Event Listeners ---
-        datePicker.addEventListener('change', (e) => {
-            rosterData.startDate = e.target.value;
-            render();
-            saveDataToLocalStorage();
-});
-        addStaffForm.addEventListener('submit', handleAddStaff);
-        shareButton.addEventListener('click', openShareModal);
-        closeModalButton.addEventListener('click', closeShareModal);
-        shareModal.addEventListener('click', (e) => {
-            if (e.target === shareModal) closeShareModal();
-        });
-        copyEmbedCodeButton.addEventListener('click', () => {
-            embedCodeTextarea.select();
-            document.execCommand('copy');
-            copyButtonText.textContent = 'Copied!';
-            setTimeout(() => { copyButtonText.textContent = 'Copy Code'; }, 2000);
-        });
-    });
+    window.saveAsPattern = () => {
+        if (!confirm("Save this week as your Regular Pattern?")) return;
+        rosterData.patterns = JSON.parse(JSON.stringify(rosterData.weeks[currentMonday].sections));
+        triggerSave();
+    };
+
+    window.loadPattern = () => {
+        if (!rosterData.patterns) return alert("No pattern saved yet.");
+        if (!confirm("Overwrite current week with Regular Pattern?")) return;
+        rosterData.weeks[currentMonday].sections = JSON.parse(JSON.stringify(rosterData.patterns));
+        render(); triggerSave();
+    };
+
+    window.clearDailyNotes = () => {
+        if (!confirm("Clear all handover notes for this week?")) return;
+        rosterData.weeks[currentMonday].notes = ['', '', '', '', '', '', ''];
+        render(); triggerSave();
+    };
+
+    window.copyToNextWeek = () => {
+        if (!confirm("Overwrite next week with this current schedule?")) return;
+        const current = new Date(currentMonday + 'T00:00:00');
+        current.setDate(current.getDate() + 7);
+        const next = formatDateLocal(current);
+        rosterData.weeks[next] = JSON.parse(JSON.stringify(rosterData.weeks[currentMonday]));
+        currentMonday = next; render(); triggerSave();
+    };
+
+    window.addRow = (id) => {
+        rosterData.weeks[currentMonday].sections[id].push({ shifts: Array.from({length: 7}, () => ({ name: '', note: '', color: MODERN_PALETTE[0] })) });
+        render(); triggerSave();
+    };
+
+    window.removeRow = (id, idx) => {
+        if (!confirm("Delete this row?")) return;
+        rosterData.weeks[currentMonday].sections[id].splice(idx, 1);
+        render(); triggerSave();
+    };
+
+    window.changeDay = (dir) => { selectedDayIndex = (selectedDayIndex + dir + 7) % 7; render(); };
+
+    document.getElementById('add-staff-form').onsubmit = (e) => {
+        e.preventDefault();
+        const n = document.getElementById('new-staff-name').value.trim();
+        if (n && !staffMembers.some(s => s.name === n)) {
+            staffMembers.push({ name: n });
+            populateFilterDropdown();
+            render(); triggerSave();
+            document.getElementById('new-staff-name').value = '';
+        }
+    };
+
+    datePicker.onchange = (e) => {
+        const picked = new Date(e.target.value + 'T00:00:00');
+        const pickedMon = getMondayString(picked);
+        
+        if (APP_MODE === 'view') {
+            const now = new Date();
+            const thisMonStr = getMondayString(now);
+            const nextWeekMon = new Date(new Date(thisMonStr + 'T00:00:00').getTime() + 7*86400000);
+            const nextWeekMonStr = formatDateLocal(nextWeekMon);
+            if (pickedMon !== thisMonStr && pickedMon !== nextWeekMonStr) {
+                alert("View only mode is restricted to this week and next week.");
+                render(); return;
+            }
+        }
+
+        currentMonday = pickedMon;
+        let day = picked.getDay();
+        selectedDayIndex = (day === 0) ? 6 : day - 1;
+        ensureWeekExists(currentMonday);
+        render(); 
+    };
+
+    window.addEventListener('resize', render);
+    window.addEventListener('orientationchange', render);
     </script>
 </body>
 </html>
